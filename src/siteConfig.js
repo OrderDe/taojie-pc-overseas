@@ -7,6 +7,7 @@ import { reactive } from 'vue'
 // the defaults below, and a missing file changes nothing.
 export const siteConfig = reactive({
   defaultTheme: 'h', // one of a–h; a visitor's own theme choice (localStorage) wins
+  allowThemeSwitch: true, // false hides the top-bar theme select and forces defaultTheme for everyone
   heroTitle: '', // overrides the theme headline when set
   heroSubtitle: '', // overrides the theme sub-line when set
   announcement: '', // thin notice shown in the top bar when set

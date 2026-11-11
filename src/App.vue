@@ -19,9 +19,14 @@ const THEMES = {
 }
 const themeKeys = Object.keys(THEMES)
 
-const theme = ref(localStorage.getItem('taojie-theme') || siteConfig.defaultTheme || 'h')
-if (!THEMES[theme.value]) theme.value = 'h'
-watch(theme, (v) => localStorage.setItem('taojie-theme', v))
+// Visitor's own pick (top-bar select). Only honoured while the admin allows
+// theme switching; otherwise everyone gets the admin's defaultTheme.
+const chosenTheme = ref(localStorage.getItem('taojie-theme') || siteConfig.defaultTheme || 'h')
+watch(chosenTheme, (v) => localStorage.setItem('taojie-theme', v))
+const theme = computed(() => {
+  const k = siteConfig.allowThemeSwitch ? chosenTheme.value : siteConfig.defaultTheme
+  return THEMES[k] ? k : 'h'
+})
 
 const view = ref('home') // 'home' | 'detail'
 const categories = ref([])
@@ -102,9 +107,9 @@ onMounted(async () => {
             <option v-for="l in LANGS" :key="l.code" :value="l.code">{{ l.label }}</option>
           </select>
           <span class="topbar-cur">{{ siteConfig.currency }}</span>
-          <label class="theme-switch">
+          <label v-if="siteConfig.allowThemeSwitch" class="theme-switch">
             {{ t('theme') }}
-            <select v-model="theme" aria-label="Switch theme">
+            <select v-model="chosenTheme" aria-label="Switch theme">
               <option v-for="k in themeKeys" :key="k" :value="k">{{ THEMES[k].label }}</option>
             </select>
           </label>
