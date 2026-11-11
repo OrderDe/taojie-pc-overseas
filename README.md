@@ -46,7 +46,8 @@ and the footer shows “Demo data”.
 
 ## Themes
 
-Switch in the top bar; the choice persists in `localStorage`. Default: **H**.
+Choose the storefront theme in the overseas admin → 主题配置.
+The saved theme applies to all visitors after a page refresh. Default: **H**.
 
 | Key | Theme | Notes |
 |-----|-------|-------|
@@ -118,6 +119,5 @@ which exports exactly this file; the backend copy is managed through its
 admin endpoint (`PUT /api/admin/site-config`).
 Fields (all optional): `defaultTheme` (a–h), `heroTitle`, `heroSubtitle`,
 `announcement`, `showRfq`, `whatsapp`, `email`, `currency` (label only),
-`defaultLanguage` (en/zh/es/fr/pt), `allowThemeSwitch` (false hides the
-top-bar theme select and forces `defaultTheme` for every visitor).
-A visitor's own theme choice in the top bar overrides `defaultTheme`.
+`defaultLanguage` (en/zh/es/fr/pt).
+The backend's `defaultTheme` applies to every visitor; browser-local theme choices are ignored.

@@ -1,13 +1,10 @@
 import { reactive } from 'vue'
 
 // Runtime site configuration for the overseas PC showcase.
-// Edited in the platform admin (plat: 系统设置 → PC商城设置 → 海外PC站配置),
-// exported there as pc-config.json and placed next to the built site
-// (dist/pc-config.json). Every field is optional; missing fields keep
-// the defaults below, and a missing file changes nothing.
+// Managed in the overseas admin site configuration. pc-config.json supplies
+// fallback defaults when the backend is unavailable.
 export const siteConfig = reactive({
-  defaultTheme: 'h', // one of a–h; a visitor's own theme choice (localStorage) wins
-  allowThemeSwitch: true, // false hides the top-bar theme select and forces defaultTheme for everyone
+  defaultTheme: 'h', // one of a–h, selected by the admin for all visitors
   heroTitle: '', // overrides the theme headline when set
   heroSubtitle: '', // overrides the theme sub-line when set
   announcement: '', // thin notice shown in the top bar when set
@@ -21,7 +18,13 @@ export const siteConfig = reactive({
 function mergeConfig(data) {
   if (!data || typeof data !== 'object') return
   for (const k of Object.keys(siteConfig)) {
-    if (data[k] !== undefined && data[k] !== null && data[k] !== '') siteConfig[k] = data[k]
+    if (data[k] === undefined || data[k] === null || data[k] === '') continue
+    if (k === 'defaultTheme') {
+      const theme = String(data[k]).toLowerCase()
+      if (/^[a-h]$/.test(theme)) siteConfig.defaultTheme = theme
+    } else {
+      siteConfig[k] = data[k]
+    }
   }
 }
 
@@ -31,7 +34,11 @@ async function fetchJsonWithTimeout(url, ms) {
   try {
     const res = await fetch(url, { signal: ctrl.signal, cache: 'no-store' })
     if (!res.ok) return null
-    return await res.json()
+    const body = await res.json()
+    if (body && typeof body === 'object' && 'code' in body && 'data' in body) {
+      return body.code === 200 ? body.data : null
+    }
+    return body
   } catch {
     return null
   } finally {
@@ -44,6 +51,6 @@ export async function loadSiteConfig() {
   mergeConfig(await fetchJsonWithTimeout('pc-config.json', 2500))
   // 2) Overseas backend config endpoint — wins when reachable, so the
   //    admin can later switch to API-managed config without a rebuild.
-  const base = (import.meta.env.VITE_API_BASE || '/api').replace(/\/$/, '')
+  const base = (import.meta.env?.VITE_API_BASE || '/api').replace(/\/$/, '')
   mergeConfig(await fetchJsonWithTimeout(`${base}/site-config`, 2500))
 }

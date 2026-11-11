@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import ProductCard from './components/ProductCard.vue'
 import CartDrawer from './components/CartDrawer.vue'
 import RfqPanel from './components/RfqPanel.vue'
@@ -17,15 +17,10 @@ const THEMES = {
   g: { label: 'G · Port Trade' },
   h: { label: 'H · Colour Field' }
 }
-const themeKeys = Object.keys(THEMES)
-
-// Visitor's own pick (top-bar select). Only honoured while the admin allows
-// theme switching; otherwise everyone gets the admin's defaultTheme.
-const chosenTheme = ref(localStorage.getItem('taojie-theme') || siteConfig.defaultTheme || 'h')
-watch(chosenTheme, (v) => localStorage.setItem('taojie-theme', v))
+// All visitors use the theme selected in the admin site configuration.
 const theme = computed(() => {
-  const k = siteConfig.allowThemeSwitch ? chosenTheme.value : siteConfig.defaultTheme
-  return THEMES[k] ? k : 'h'
+  const key = String(siteConfig.defaultTheme || 'h').toLowerCase()
+  return THEMES[key] ? key : 'h'
 })
 
 const view = ref('home') // 'home' | 'detail'
@@ -107,12 +102,6 @@ onMounted(async () => {
             <option v-for="l in LANGS" :key="l.code" :value="l.code">{{ l.label }}</option>
           </select>
           <span class="topbar-cur">{{ siteConfig.currency }}</span>
-          <label v-if="siteConfig.allowThemeSwitch" class="theme-switch">
-            {{ t('theme') }}
-            <select v-model="chosenTheme" aria-label="Switch theme">
-              <option v-for="k in themeKeys" :key="k" :value="k">{{ THEMES[k].label }}</option>
-            </select>
-          </label>
         </span>
       </div>
     </div>
