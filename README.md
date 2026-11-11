@@ -17,30 +17,32 @@ npm run preview  # serve the production build
 
 Requires Node 18+ (developed on Node 24 / npm 10).
 
-## Data: live API with demo fallback
+## Data: overseas backend with demo fallback
 
-`src/api.js` calls the shop's public front API (CRMEB-style, no login):
+`src/api.js` calls the **overseas mall backend** (`taojie-overseas-server`,
+a separate lightweight project — see `docs/设计需求文档.md`). The domestic
+`tjmall` front API is **not** called at runtime: it is the mini-program's
+login-based API (anonymous calls return 401), so product data reaches the
+overseas backend by import/sync from tjmall instead.
 
 | Purpose    | Endpoint |
 |------------|----------|
-| Categories | `GET product/category/get/tree/IntegrateCategory` |
-| Products   | `GET product/list`, falling back to `GET index/product/list`, then `GET index/product` |
-| Detail     | `GET product/detail?textOriginalId=<id>` |
-| Hot words  | `GET index/search/keyword` |
+| Categories | `GET categories?lang=` |
+| Products   | `GET products?keyword=&categoryId=&page=&limit=&lang=` |
+| Detail     | `GET products/<id>?lang=` |
+| Hot words  | `GET keywords` |
+| RFQ        | `POST rfq` (falls back to browser-local storage when unreachable) |
+| Site config | `GET site-config` (merged over `pc-config.json` at startup) |
 
-Base URL comes from `VITE_API_BASE` (see `.env.example`), default
-`https://mall.taojieyph.com/front`.
+Base URL comes from `VITE_API_BASE` (see `.env.example`), default `/api`
+(same origin in production; in dev, Vite proxies `/api` to
+`http://localhost:3100`).
 
-Responses are normalized defensively (`storeName`, `image`, `price`,
-`otPrice`, `sales`, `unitName`, …). **On any failure — offline, timeout
-(6 s), unexpected shape, or CORS — the site falls back to bundled sample
-data** (`src/data/sample.js`: the 8 prototype products plus real store
-paints) and the footer shows “Demo data — connect the shop API”.
-
-> ⚠️ Live mode from a new domain is **not yet verified**: the backend must
-> allow cross-origin requests from wherever this site is deployed (CORS),
-> and the endpoints above must be enabled for that origin. Until then the
-> site runs in demo mode, which is fully browsable.
+Responses are normalized defensively (`name`, `image`, `price`, `otPrice`,
+`sales`, `unit`, …). **On any failure — offline, timeout (6 s), unexpected
+shape — the site falls back to bundled sample data**
+(`src/data/sample.js`: the 8 prototype products plus real store paints)
+and the footer shows “Demo data”.
 
 ## Themes
 
@@ -76,18 +78,19 @@ own choice always wins.
 ## Scope (showcase only)
 
 - The **cart is local-only** (in-memory): no checkout, no payment.
-- The **RFQ form is stored in `localStorage` only** and never sent anywhere;
-  wiring it to sales (email/WhatsApp/CRM) is a production follow-up.
+- The **RFQ form is submitted to the overseas backend** (`POST rfq`) when
+  it is reachable; otherwise it is kept in `localStorage` as a fallback.
+  Sales notification runs through the backend (webhook hook).
 - Sign In / Orders links in the top bar are placeholders.
 
 ## Deploy
 
 `npm run build` produces a static `dist/` — host it on any static server /
-CDN / the shop's Nginx, and set `VITE_API_BASE` at build time to point at
-the shop backend:
+CDN / the mall's Nginx next to the overseas backend, with `/api/`
+reverse-proxied to the backend:
 
 ```bash
-VITE_API_BASE=https://mall.taojieyph.com/front npm run build
+npm run build   # VITE_API_BASE defaults to /api (same origin)
 ```
 
 ## Layout
@@ -101,15 +104,18 @@ src/
   components/
     ProductCard.vue     # incl. theme-D spec rows and theme-G tiered pricing
     CartDrawer.vue      # local showcase cart
-    RfqPanel.vue        # RFQ form (localStorage only)
+    RfqPanel.vue        # RFQ form (posts to backend, localStorage fallback)
 ```
 
 ## Admin configuration (plat → pc-config.json)
 
-The site reads an optional runtime config file, `pc-config.json`, from the
-same directory as the built site (`dist/pc-config.json`, a default copy
-ships in `public/`). It is edited in the platform admin repo `OrderDe/plat`
-under 系统设置 → PC商城设置 → 海外PC站配置, which exports exactly this file.
+The site reads runtime config at startup: first an optional `pc-config.json`
+file from the same directory as the built site (`dist/pc-config.json`, a
+default copy ships in `public/`), then the overseas backend's
+`GET site-config`, which wins when reachable. The file flow is edited in the
+platform admin repo `OrderDe/plat` under 系统设置 → PC商城设置 → 海外PC站配置,
+which exports exactly this file; the backend copy is managed through its
+admin endpoint (`PUT /api/admin/site-config`).
 Fields (all optional): `defaultTheme` (a–h), `heroTitle`, `heroSubtitle`,
 `announcement`, `showRfq`, `whatsapp`, `email`, `currency` (label only),
 `defaultLanguage` (en/zh/es/fr/pt).

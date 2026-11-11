@@ -1,13 +1,17 @@
-// Data layer for the Taojie shop "front" API (CRMEB-style public endpoints,
-// the same ones the uniapp mini-program uses without login).
+// Data layer for the overseas mall backend (taojie-overseas-server):
+// public catalogue endpoints — categories / products / detail / keywords —
+// plus RFQ submission. The tjmall "front" API is NOT used at runtime: it is
+// the mini-program's login-based API (anonymous calls get 401); product data
+// reaches this backend by sync/import from tjmall instead.
 //
-// Every call is defensive: any network error, timeout, CORS failure or
-// unexpected payload shape falls back to the bundled sample data, and the
-// caller learns via `meta.demo === true` that demo mode is active.
+// Every call is defensive: any network error, timeout or unexpected payload
+// shape falls back to the bundled sample data, and the caller learns via
+// `meta.demo === true` that demo mode is active.
 
 import { sampleCategories, sampleProducts, sampleKeywords, sampleBrands } from './data/sample.js'
+import { locale } from './i18n.js'
 
-export const API_BASE = (import.meta.env.VITE_API_BASE || 'https://mall.taojieyph.com/front').replace(/\/$/, '')
+export const API_BASE = (import.meta.env.VITE_API_BASE || '/api').replace(/\/$/, '')
 
 const TIMEOUT_MS = 6000
 
@@ -86,7 +90,7 @@ function listFrom(data) {
 
 export async function fetchCategories() {
   try {
-    const data = await getJson('product/category/get/tree/IntegrateCategory')
+    const data = await getJson('categories', { lang: locale.value })
     const flat = []
     const walk = (nodes) => {
       if (!Array.isArray(nodes)) return
@@ -108,18 +112,12 @@ export async function fetchCategories() {
 }
 
 export async function fetchProducts({ keyword = '', categoryId = '' } = {}) {
-  const attempts = [
-    () => getJson('product/list', { keyword, cateId: categoryId, page: 1, limit: 48 }),
-    () => getJson('index/product/list', { keyword, page: 1, limit: 48 }),
-    () => getJson('index/product', { keyword })
-  ]
-  for (const attempt of attempts) {
-    try {
-      const data = await attempt()
-      const items = listFrom(data).map(normalizeProduct).filter(Boolean)
-      if (items.length) return { items, demo: false }
-    } catch { /* try next endpoint */ }
-  }
+  try {
+    const data = await getJson('products', { keyword, categoryId, page: 1, limit: 48, lang: locale.value })
+    const items = listFrom(data).map(normalizeProduct).filter(Boolean)
+    if (items.length) return { items, demo: false }
+    throw new Error('empty products')
+  } catch { /* fall through to demo data */ }
   let items = sampleProducts
   if (categoryId) items = items.filter((p) => p.categoryId === categoryId)
   if (keyword) {
@@ -131,7 +129,7 @@ export async function fetchProducts({ keyword = '', categoryId = '' } = {}) {
 
 export async function fetchProductDetail(id) {
   try {
-    const data = await getJson('product/detail', { textOriginalId: id, id })
+    const data = await getJson(`products/${encodeURIComponent(id)}`, { lang: locale.value })
     const raw = (data && (data.storeInfo || data.product || data.detail)) || data
     const normalized = normalizeProduct(raw)
     if (normalized && normalized.name !== 'Untitled product') return { item: normalized, demo: false }
@@ -144,12 +142,34 @@ export async function fetchProductDetail(id) {
 
 export async function fetchKeywords() {
   try {
-    const data = await getJson('index/search/keyword')
+    const data = await getJson('keywords', { lang: locale.value })
     const items = listFrom(data).map((k) => String(typeof k === 'string' ? k : pick(k, ['title', 'name', 'keyword'], ''))).filter(Boolean)
     if (items.length) return { items: items.slice(0, 8), demo: false }
     throw new Error('empty keywords')
   } catch {
     return { items: sampleKeywords, demo: true }
+  }
+}
+
+// Submit an RFQ to the overseas backend. Returns true when the backend
+// stored it; false means the caller should keep its local fallback copy.
+export async function submitRfq(payload) {
+  try {
+    const ctrl = new AbortController()
+    const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS)
+    try {
+      const res = await fetch(`${API_BASE}/rfq`, {
+        method: 'POST',
+        signal: ctrl.signal,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, lang: locale.value })
+      })
+      return res.ok
+    } finally {
+      clearTimeout(timer)
+    }
+  } catch {
+    return false
   }
 }
 

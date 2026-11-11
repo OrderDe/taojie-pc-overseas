@@ -93,6 +93,7 @@ const MESSAGES = {
     rfqQty: 'Quantity (e.g. 500)', rfqMsg: 'Target market, packaging, questions…',
     sendRfq: 'Send RFQ', rfqDoneTitle: 'Thanks — RFQ received.',
     rfqDoneText: 'It is saved on this device only (demo). In production this connects to our sales team.',
+    rfqDoneServer: 'Our sales team will reply within one business day.',
     writeAnother: 'Write another'
   },
   zh: {
@@ -132,6 +133,7 @@ const MESSAGES = {
     rfqQty: '数量（如 500）', rfqMsg: '目标市场、包装、其他问题…',
     sendRfq: '发送询价', rfqDoneTitle: '已收到，谢谢。',
     rfqDoneText: '询价只保存在本设备上（演示）。正式上线后会直接对接我们的销售团队。',
+    rfqDoneServer: '销售团队会在一个工作日内回复你。',
     writeAnother: '再写一条'
   },
   es: {
@@ -171,6 +173,7 @@ const MESSAGES = {
     rfqQty: 'Cantidad (ej. 500)', rfqMsg: 'Mercado objetivo, embalaje, preguntas…',
     sendRfq: 'Enviar consulta', rfqDoneTitle: 'Gracias — consulta recibida.',
     rfqDoneText: 'Se guarda solo en este dispositivo (demo). En producción llega directo a nuestro equipo de ventas.',
+    rfqDoneServer: 'Nuestro equipo de ventas responderá en un día laborable.',
     writeAnother: 'Escribir otra'
   },
   fr: {
@@ -210,6 +213,7 @@ const MESSAGES = {
     rfqQty: 'Quantité (ex. 500)', rfqMsg: 'Marché cible, emballage, questions…',
     sendRfq: 'Envoyer la demande', rfqDoneTitle: 'Merci — demande reçue.',
     rfqDoneText: "Elle est enregistrée sur cet appareil uniquement (démo). En production, elle arrive directement à notre équipe commerciale.",
+    rfqDoneServer: 'Notre équipe commerciale répondra sous un jour ouvrable.',
     writeAnother: 'En écrire une autre'
   },
   pt: {
@@ -249,6 +253,7 @@ const MESSAGES = {
     rfqQty: 'Quantidade (ex.: 500)', rfqMsg: 'Mercado-alvo, embalagem, dúvidas…',
     sendRfq: 'Enviar consulta', rfqDoneTitle: 'Obrigado — consulta recebida.',
     rfqDoneText: 'Ela fica salva só neste aparelho (demo). Em produção, chega direto à nossa equipe de vendas.',
+    rfqDoneServer: 'Nossa equipe de vendas responderá em um dia útil.',
     writeAnother: 'Escrever outra'
   }
 }

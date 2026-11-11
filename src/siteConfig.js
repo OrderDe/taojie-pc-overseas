@@ -17,20 +17,32 @@ export const siteConfig = reactive({
   defaultLanguage: 'en', // one of en/zh/es/fr/pt; a visitor's own choice wins
 })
 
-export async function loadSiteConfig() {
-  try {
-    const ctrl = new AbortController()
-    const t = setTimeout(() => ctrl.abort(), 2500)
-    const res = await fetch('pc-config.json', { signal: ctrl.signal, cache: 'no-store' })
-    clearTimeout(t)
-    if (!res.ok) return
-    const data = await res.json()
-    if (data && typeof data === 'object') {
-      for (const k of Object.keys(siteConfig)) {
-        if (data[k] !== undefined && data[k] !== null && data[k] !== '') siteConfig[k] = data[k]
-      }
-    }
-  } catch {
-    // No config file (or unreadable): keep defaults silently.
+function mergeConfig(data) {
+  if (!data || typeof data !== 'object') return
+  for (const k of Object.keys(siteConfig)) {
+    if (data[k] !== undefined && data[k] !== null && data[k] !== '') siteConfig[k] = data[k]
   }
+}
+
+async function fetchJsonWithTimeout(url, ms) {
+  const ctrl = new AbortController()
+  const t = setTimeout(() => ctrl.abort(), ms)
+  try {
+    const res = await fetch(url, { signal: ctrl.signal, cache: 'no-store' })
+    if (!res.ok) return null
+    return await res.json()
+  } catch {
+    return null
+  } finally {
+    clearTimeout(t)
+  }
+}
+
+export async function loadSiteConfig() {
+  // 1) Static file next to the built site (plat export flow).
+  mergeConfig(await fetchJsonWithTimeout('pc-config.json', 2500))
+  // 2) Overseas backend config endpoint — wins when reachable, so the
+  //    admin can later switch to API-managed config without a rebuild.
+  const base = (import.meta.env.VITE_API_BASE || '/api').replace(/\/$/, '')
+  mergeConfig(await fetchJsonWithTimeout(`${base}/site-config`, 2500))
 }
