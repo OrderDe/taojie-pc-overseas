@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { t, tx } from '../i18n.js'
+import { siteConfig } from '../siteConfig.js'
 const props = defineProps({ product: { type: Object, required: true }, theme: { type: String, default: 'h' } })
 defineEmits(['open', 'add', 'quote'])
 // Real data often has an empty unit or the literal '无' — show just the price then.
@@ -44,8 +45,8 @@ const unitLabel = computed(() => {
         <span v-if="product.sales">{{ t('sold', { n: product.sales }) }}</span>
         <span v-if="product.moq">{{ t('moqLabel', { n: product.moq }) }}</span>
       </p>
-      <div class="card-actions" @click.stop>
-        <button class="btn btn-primary btn-sm" @click="$emit('add', product)">{{ t('addToCart') }}</button>
+      <div class="card-actions" :class="{ 'actions-solo': !siteConfig.showCart }" @click.stop>
+        <button v-if="siteConfig.showCart" class="btn btn-primary btn-sm" @click="$emit('add', product)">{{ t('addToCart') }}</button>
         <button class="btn btn-ghost btn-sm" @click="$emit('quote', product)">{{ t('requestQuote') }}</button>
       </div>
     </div>

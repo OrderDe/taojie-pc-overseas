@@ -125,7 +125,7 @@ onMounted(async () => {
         <span class="topbar-left">{{ siteConfig.announcement || t('announcement') }}</span>
         <span class="topbar-right">
           <a href="#" @click.prevent>{{ t('signIn') }}</a>
-          <a href="#" @click.prevent>{{ t('orders') }}</a>
+          <a v-if="siteConfig.showCart" href="#" @click.prevent>{{ t('orders') }}</a>
           <a href="#" @click.prevent>{{ t('help') }}</a>
           <span class="lang-menu">
             <button type="button" class="lang-btn" aria-haspopup="listbox" :aria-expanded="langOpen" @click="langOpen = !langOpen">
@@ -152,7 +152,7 @@ onMounted(async () => {
           <input v-model="query" :placeholder="t('searchPh')" />
           <button type="submit">{{ t('search') }}</button>
         </form>
-        <button class="cart-btn" @click="cartOpen = true">{{ t('cart') }} <b>{{ cartCount }}</b></button>
+        <button v-if="siteConfig.showCart" class="cart-btn" @click="cartOpen = true">{{ t('cart') }} <b>{{ cartCount }}</b></button>
       </div>
       <div class="wrap hotwords" v-if="keywords.length">
         <button v-for="k in keywords" :key="k" @click="query = k; onSearch()">{{ k }}</button>
@@ -255,8 +255,8 @@ onMounted(async () => {
           </table>
           <p v-else class="detail-blurb">{{ t('tdsNote') }}</p>
 
-          <div class="detail-actions">
-            <button class="btn btn-primary" @click="addToCart(selected)">{{ t('addToCart') }}</button>
+          <div class="detail-actions" :class="{ 'actions-solo': !siteConfig.showCart }">
+            <button v-if="siteConfig.showCart" class="btn btn-primary" @click="addToCart(selected)">{{ t('addToCart') }}</button>
             <button class="btn btn-ghost" @click="requestQuote(selected)">{{ t('requestQuote') }}</button>
           </div>
           <p class="trust" v-if="theme === 'b'">{{ t('trustText') }}</p>

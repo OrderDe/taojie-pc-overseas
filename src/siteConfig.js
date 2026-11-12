@@ -9,6 +9,7 @@ export const siteConfig = reactive({
   heroSubtitle: '', // overrides the theme sub-line when set
   announcement: '', // thin notice shown in the top bar when set
   showRfq: true, // RFQ panel + section visibility
+  showCart: false, // cart buttons/drawer + orders link; hidden unless the admin turns it on (inquiry-site default)
   whatsapp: '', // shown in the footer when set
   email: '', // shown in the footer when set
   currency: 'USD', // label only; prices come from the shop API as returned
