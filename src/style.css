@@ -50,7 +50,16 @@ body { background: #f3f3f5; }
 .topbar-right { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
 .topbar-right a { opacity: .85; } .topbar-right a:hover { opacity: 1; }
 .theme-switch select { border: 0; border-radius: 999px; padding: 4px 10px; font-size: 13px; }
-.lang-switch { border: 0; border-radius: 999px; padding: 4px 8px; font-size: 13px; background: rgba(127, 127, 127, .18); color: inherit; cursor: pointer; }
+.lang-menu { position: relative; display: inline-flex; }
+.lang-btn { border: 0; border-radius: 999px; padding: 4px 12px; font-size: 13px; background: rgba(127, 127, 127, .18); color: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-family: inherit; }
+.lang-btn:hover { background: rgba(127, 127, 127, .32); }
+.lang-caret { font-size: 10px; opacity: .8; }
+.lang-backdrop { position: fixed; inset: 0; z-index: 70; }
+.lang-list { position: absolute; right: 0; top: calc(100% + 8px); z-index: 80; min-width: 158px; background: #fff; color: #1f2430; border-radius: 12px; box-shadow: 0 12px 32px rgba(15, 18, 30, .22); padding: 6px; display: flex; flex-direction: column; }
+.lang-list button { border: 0; background: transparent; text-align: left; padding: 8px 10px; border-radius: 8px; font-size: 13.5px; color: inherit; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-family: inherit; }
+.lang-list button:hover { background: #f2f3f7; }
+.lang-list button.active { font-weight: 700; color: var(--brand); }
+.lang-check { font-size: 12px; }
 .header { background: var(--surface); border-bottom: 1px solid var(--line); }
 .header-in { display: flex; align-items: center; gap: 28px; padding-top: 18px; padding-bottom: 14px; }
 .logo { font-size: 34px; font-weight: 900; letter-spacing: 1px; color: var(--brand); white-space: nowrap; }

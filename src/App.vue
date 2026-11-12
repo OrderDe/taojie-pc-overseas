@@ -39,6 +39,10 @@ const cartOpen = ref(false)
 const rfqProduct = ref('')
 const toast = ref('')
 
+const langOpen = ref(false)
+const currentLang = computed(() => LANGS.find((l) => l.code === locale.value) || LANGS[0])
+function pickLang(code) { setLocale(code); langOpen.value = false }
+
 const cartCount = computed(() => cart.value.reduce((s, i) => s + i.qty, 0))
 const meta = computed(() => THEMES[theme.value])
 const heroTitle = computed(() => siteConfig.heroTitle || themeText(theme.value).headline)
@@ -104,9 +108,18 @@ onMounted(async () => {
           <a href="#" @click.prevent>{{ t('signIn') }}</a>
           <a href="#" @click.prevent>{{ t('orders') }}</a>
           <a href="#" @click.prevent>{{ t('help') }}</a>
-          <select class="lang-switch" :value="locale" aria-label="Language" @change="setLocale($event.target.value)">
-            <option v-for="l in LANGS" :key="l.code" :value="l.code">{{ l.label }}</option>
-          </select>
+          <span class="lang-menu">
+            <button type="button" class="lang-btn" aria-haspopup="listbox" :aria-expanded="langOpen" @click="langOpen = !langOpen">
+              {{ currentLang.label }}<span class="lang-caret">▾</span>
+            </button>
+            <span v-if="langOpen" class="lang-backdrop" @click="langOpen = false"></span>
+            <span v-if="langOpen" class="lang-list" role="listbox">
+              <button v-for="l in LANGS" :key="l.code" type="button" role="option" :aria-selected="l.code === locale"
+                :class="{ active: l.code === locale }" @click="pickLang(l.code)">
+                <span>{{ l.label }}</span><span v-if="l.code === locale" class="lang-check">✓</span>
+              </button>
+            </span>
+          </span>
           <span class="topbar-cur">{{ siteConfig.currency }}</span>
         </span>
       </div>
