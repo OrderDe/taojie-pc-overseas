@@ -62,6 +62,10 @@ const cartCount = computed(() => cart.value.reduce((s, i) => s + i.qty, 0))
 const meta = computed(() => THEMES[theme.value])
 const heroTitle = computed(() => siteConfig.heroTitle || themeText(theme.value).headline)
 const heroSub = computed(() => siteConfig.heroSubtitle || themeText(theme.value).sub)
+// Hero side column: theme G shows the compact RFQ panel there; every theme
+// otherwise shows the dealer card. The column exists only when one of the
+// two is enabled, so hiding the dealer card leaves no empty grid track.
+const heroSideVisible = computed(() => (theme.value === 'g' && siteConfig.showRfq) || siteConfig.showDealer)
 // Top navigation: admin-configured navItems win; empty = i18n defaults.
 const zones = computed(() => {
   const items = (siteConfig.navItems || []).filter((i) => i && i.label)
@@ -180,7 +184,7 @@ onMounted(async () => {
     <main v-if="view === 'home'">
       <!-- Hero -->
       <section class="hero">
-        <div class="wrap hero-in">
+        <div class="wrap hero-in" :class="{ 'no-side': !heroSideVisible }">
           <aside class="rail">
             <h2>{{ t('allCategories') }}</h2>
             <button :class="{ active: !activeCategory }" @click="pickCategory('')">{{ t('allProducts') }}</button>
@@ -196,9 +200,9 @@ onMounted(async () => {
             <p class="hero-stats" v-if="theme === 'b' || theme === 'h'"><b>1,038</b> {{ t('statFormulas') }} <b>128</b> {{ t('statToners') }} <b>50+</b> {{ t('statMarkets') }}</p>
           </div>
 
-          <aside class="hero-side">
+          <aside v-if="heroSideVisible" class="hero-side">
             <RfqPanel v-if="theme === 'g' && siteConfig.showRfq" :product-name="rfqProduct" compact />
-            <div v-else class="promo">
+            <div v-else-if="siteConfig.showDealer" class="promo">
               <h3>{{ siteConfig.dealerTitle || t('distributorTitle') }}</h3>
               <p>{{ siteConfig.dealerText || t('distributorText') }}</p>
               <button class="btn btn-light" @click="requestQuote(null)">{{ siteConfig.dealerButton || t('talkToSales') }}</button>

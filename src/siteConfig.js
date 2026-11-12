@@ -10,6 +10,7 @@ export const siteConfig = reactive({
   announcement: '', // thin notice shown in the top bar when set
   showRfq: true, // RFQ panel + section visibility
   showCart: false, // cart buttons/drawer + orders link; hidden unless the admin turns it on (inquiry-site default)
+  showDealer: false, // hero "become a dealer" card; hidden unless the admin turns it on
   whatsapp: '', // shown in the footer when set
   email: '', // shown in the footer when set
   currency: 'USD', // label only; prices come from the shop API as returned
