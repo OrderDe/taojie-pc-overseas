@@ -66,6 +66,8 @@ export function normalizeProduct(raw, idx = 0) {
     name,
     categoryId: String(pick(raw, ['cateId', 'categoryId', 'cid'], '')),
     category: String(pick(raw, ['cateName', 'categoryName', 'category'], 'Products')),
+    brandId: String(pick(raw, ['brandId', 'brand_id'], '')),
+    brand: String(pick(raw, ['brand', 'brandName'], '')),
     price: Number(pick(raw, ['price', 'vipPrice'], 0)) || 0,
     otPrice: Number(pick(raw, ['otPrice', 'marketPrice', 'originalPrice'], 0)) || 0,
     sales: Number(pick(raw, ['sales', 'ficti', 'sold'], 0)) || 0,
@@ -111,15 +113,20 @@ export async function fetchCategories() {
   }
 }
 
-export async function fetchProducts({ keyword = '', categoryId = '' } = {}) {
+export async function fetchProducts({ keyword = '', categoryId = '', brandId = '' } = {}) {
   try {
-    const data = await getJson('products', { keyword, categoryId, page: 1, limit: 48, lang: locale.value })
+    const data = await getJson('products', { keyword, categoryId, brandId, page: 1, limit: 48, lang: locale.value })
     const items = listFrom(data).map(normalizeProduct).filter(Boolean)
     if (items.length) return { items, demo: false }
+    // A filtered query (keyword / category / brand) that matches nothing is
+    // a genuine empty result — show the empty state, not the demo catalogue.
+    // Only an unfiltered empty response still falls back to demo data.
+    if (keyword || categoryId || brandId) return { items: [], demo: false }
     throw new Error('empty products')
   } catch { /* fall through to demo data */ }
   let items = sampleProducts
   if (categoryId) items = items.filter((p) => p.categoryId === categoryId)
+  if (brandId) items = items.filter((p) => String(p.brandId || '') === String(brandId))
   if (keyword) {
     const q = keyword.toLowerCase()
     items = items.filter((p) => (p.name + ' ' + p.category).toLowerCase().includes(q))
@@ -238,14 +245,17 @@ export async function chatPull(token, afterId = 0) {
   return chatFetch(`chat/messages?token=${encodeURIComponent(token)}&afterId=${Math.max(0, afterId || 0)}`)
 }
 
-// Brand strip names from the backend's public brands endpoint; falls back
-// to the bundled sample list when the backend is unreachable or has none.
+// Brand list from the backend's public brands endpoint, as [{id, name}]
+// so the chips can filter by brandId; falls back to the bundled sample
+// list (same shape) when the backend is unreachable or has none.
 export async function fetchBrands() {
   try {
     const data = await getJson('brands', { lang: locale.value })
     const items = listFrom(data)
-      .map((b) => String(typeof b === 'string' ? b : pick(b, ['name', 'label', 'title'], '')))
-      .filter(Boolean)
+      .map((b) => (typeof b === 'string'
+        ? { id: '', name: b }
+        : { id: String(pick(b, ['id', 'value'], '')), name: String(pick(b, ['name', 'label', 'title'], '')) }))
+      .filter((b) => b.name && b.id)
     if (items.length) return { items, demo: false }
     throw new Error('empty brands')
   } catch {

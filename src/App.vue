@@ -34,6 +34,7 @@ const loading = ref(true)
 const query = ref('')
 const searchedQuery = ref('')
 const activeCategory = ref('')
+const activeBrand = ref('')
 const selected = ref(null)
 const cart = ref([])
 const cartOpen = ref(false)
@@ -74,14 +75,16 @@ function showToast(msg) { toast.value = msg; setTimeout(() => { toast.value = ''
 
 async function loadProducts() {
   loading.value = true
-  const { items, demo } = await fetchProducts({ keyword: query.value, categoryId: activeCategory.value })
+  const { items, demo } = await fetchProducts({ keyword: query.value, categoryId: activeCategory.value, brandId: activeBrand.value })
   products.value = items
   noteDemo(demo)
   loading.value = false
 }
 
-async function onSearch() { view.value = 'home'; searchedQuery.value = query.value.trim(); await loadProducts() }
-async function pickCategory(id) { activeCategory.value = id; searchedQuery.value = ''; view.value = 'home'; await loadProducts() }
+async function onSearch() { view.value = 'home'; searchedQuery.value = query.value.trim(); activeBrand.value = ''; await loadProducts() }
+async function pickCategory(id) { activeCategory.value = id; searchedQuery.value = ''; activeBrand.value = ''; view.value = 'home'; await loadProducts() }
+// Brand chip toggle: clicking the selected brand (or the "all" chip) clears it.
+async function pickBrand(id) { activeBrand.value = activeBrand.value === id ? '' : id; await loadProducts() }
 
 async function openProduct(p) {
   const { item, demo } = await fetchProductDetail(p.id)
@@ -206,7 +209,8 @@ onMounted(async () => {
           <span v-else>{{ t('productsCount', { n: products.length }) }}</span>
         </div>
         <div v-if="brands.length" class="brands">
-          <span v-for="b in brands" :key="b">{{ b }}</span>
+          <button type="button" :class="{ active: !activeBrand }" @click="pickBrand('')">{{ t('allProducts') }}</button>
+          <button v-for="b in brands" :key="b.id" type="button" :class="{ active: activeBrand === String(b.id) }" @click="pickBrand(String(b.id))">{{ b.name }}</button>
         </div>
         <div v-if="!loading && !products.length" class="empty">{{ t('empty') }}</div>
         <div class="grid">
