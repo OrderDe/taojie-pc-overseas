@@ -229,10 +229,13 @@ onMounted(async () => {
     <main v-else-if="view === 'detail' && selected" class="wrap detail">
       <button class="btn btn-ghost btn-sm" @click="view = 'home'">{{ t('back') }}</button>
       <div class="detail-grid">
-        <div class="detail-media" :style="{ background: `linear-gradient(135deg, ${selected.visual[0]}, ${selected.visual[1]})` }">
-          <img v-if="selected.image" :src="selected.image" :alt="selected.name" @error="$event.target.remove()" />
-          <span v-else class="detail-glyph">{{ selected.visual[2] }}</span>
-          <span class="card-spectrum"></span>
+        <div class="detail-media-col">
+          <video v-if="selected.video" class="detail-video" :src="selected.video" :poster="selected.image || undefined" controls preload="metadata"></video>
+          <div class="detail-media" :style="{ background: `linear-gradient(135deg, ${selected.visual[0]}, ${selected.visual[1]})` }">
+            <img v-if="selected.image" :src="selected.image" :alt="selected.name" @error="$event.target.remove()" />
+            <span v-else class="detail-glyph">{{ selected.visual[2] }}</span>
+            <span class="card-spectrum"></span>
+          </div>
         </div>
         <div class="detail-info">
           <p class="card-cat">{{ tx(selected.category) }}</p>

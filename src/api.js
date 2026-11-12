@@ -74,6 +74,7 @@ export function normalizeProduct(raw, idx = 0) {
     unit: String(pick(raw, ['unitName', 'unit'], 'pc')),
     moq: Number(pick(raw, ['minQty', 'moq'], 0)) || 0,
     image: String(pick(raw, ['image', 'pic', 'picUrl', 'sliderImage'], '')),
+    video: String(pick(raw, ['video', 'videoUrl'], '')),
     visual: [c1, c2, glyphSource.replace(/[^A-Za-z0-9]/g, '').slice(0, 3).toUpperCase() || 'TJ'],
     tag: '',
     blurb: String(pick(raw, ['storeInfo', 'description', 'intro', 'keyword'], '')).replace(/<[^>]*>/g, '').slice(0, 160),

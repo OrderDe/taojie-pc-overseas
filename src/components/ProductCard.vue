@@ -16,6 +16,7 @@ const unitLabel = computed(() => {
       <img v-if="product.image" :src="product.image" :alt="product.name" loading="lazy" @error="$event.target.remove()" />
       <span v-else class="card-glyph">{{ product.visual[2] }}</span>
       <span v-if="product.tag" class="card-tag">{{ tx(product.tag) }}</span>
+      <span v-if="product.video" class="card-video-badge" aria-hidden="true">▶</span>
       <span class="card-spectrum"></span>
     </div>
     <div class="card-body">
