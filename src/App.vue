@@ -190,11 +190,6 @@ onMounted(async () => {
             </div>
           </aside>
         </div>
-        <!-- Search capsule straddling the hero edge -->
-        <form class="hero-search" @submit.prevent="onSearch">
-          <input v-model="query" :placeholder="t('heroSearchPh')" />
-          <button type="submit">{{ t('searchProducts') }}</button>
-        </form>
       </section>
 
       <!-- Brand story (theme F) -->
