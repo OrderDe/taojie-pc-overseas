@@ -7,6 +7,7 @@ import ChatWidget from './components/ChatWidget.vue'
 import { fetchCategories, fetchKeywords, fetchProducts, fetchProductDetail, fetchBrands, demoBrands } from './api.js'
 import { siteConfig } from './siteConfig.js'
 import { LANGS, locale, setLocale, t, tx, themeText } from './i18n.js'
+import { CURRENCIES, displayCode, baseCode, isConverted, formatPrice, initFx, setDisplay } from './utils/currency.js'
 
 const THEMES = {
   a: { label: 'A · Classic Mall' },
@@ -58,6 +59,9 @@ const langOpen = ref(false)
 const currentLang = computed(() => LANGS.find((l) => l.code === locale.value) || LANGS[0])
 function pickLang(code) { setLocale(code); langOpen.value = false }
 
+const curOpen = ref(false)
+function pickCurrency(code) { setDisplay(code); curOpen.value = false }
+
 const cartCount = computed(() => cart.value.reduce((s, i) => s + i.qty, 0))
 const meta = computed(() => THEMES[theme.value])
 const heroTitle = computed(() => siteConfig.heroTitle || themeText(theme.value).headline)
@@ -66,11 +70,44 @@ const heroSub = computed(() => siteConfig.heroSubtitle || themeText(theme.value)
 // otherwise shows the dealer card. The column exists only when one of the
 // two is enabled, so hiding the dealer card leaves no empty grid track.
 const heroSideVisible = computed(() => (theme.value === 'g' && siteConfig.showRfq) || siteConfig.showDealer)
-// Top navigation: admin-configured navItems win; empty = i18n defaults.
+// Top navigation: admin-configured navItems win; empty = i18n defaults
+// (label-only items with no click action).
 const zones = computed(() => {
   const items = (siteConfig.navItems || []).filter((i) => i && i.label)
-  return items.length ? items.map((i) => i.label) : t('zones')
+  return items.length ? items : t('zones').map((label) => ({ label }))
 })
+
+// Nav click dispatch. Items saved by the current admin carry an explicit
+// type; older items have none, so infer from link — http(s) → external,
+// #… → anchor, anything else (or empty) → no action, as before.
+function navType(item) {
+  const type = String(item.type || '')
+  if (type === 'category' || type === 'anchor' || type === 'external') return type
+  const link = String(item.link || '')
+  if (/^https?:\/\//i.test(link)) return 'external'
+  if (link.startsWith('#')) return 'anchor'
+  return ''
+}
+function scrollToAnchor(id) {
+  // Same deferred scrollIntoView pattern as requestQuote: the home view
+  // may need one render pass first when coming from the detail view.
+  // A missing element (e.g. the dealer card is switched off) is a no-op.
+  setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }), 60)
+}
+async function onNav(item) {
+  const type = navType(item)
+  if (type === 'category') {
+    await pickCategory(String(item.categoryId || ''))
+    scrollToAnchor('catalogue')
+  } else if (type === 'anchor') {
+    const id = String(item.link || '').replace(/^#/, '')
+    if (!id) return
+    view.value = 'home'
+    scrollToAnchor(id)
+  } else if (type === 'external') {
+    if (item.link) window.open(item.link, '_blank', 'noopener')
+  }
+}
 
 // Real category names are full paths ("汽车油漆 / 1K银粉色母系列 / 1K银粉色母系列");
 // compact UI spots show only the leaf segment.
@@ -131,11 +168,15 @@ onMounted(async () => {
   brands.value = brs.items
   noteDemo(cats.demo || kws.demo)
   await loadProducts()
+  // Real shop: load FX rates for the configured base currency so the
+  // top-bar currency switcher can convert prices. Demo mode never
+  // fetches rates — its prices keep the built-in "$" rendering.
+  if (!demoMode.value) initFx(siteConfig.baseCurrency, locale.value)
 })
 </script>
 
 <template>
-  <div class="site" :data-theme="theme">
+  <div id="top" class="site" :data-theme="theme">
     <!-- Top bar -->
     <div class="topbar">
       <div class="wrap topbar-in">
@@ -145,7 +186,7 @@ onMounted(async () => {
           <a v-if="siteConfig.showCart" href="#" @click.prevent>{{ t('orders') }}</a>
           <a href="#" @click.prevent>{{ t('help') }}</a>
           <span class="lang-menu">
-            <button type="button" class="lang-btn" aria-haspopup="listbox" :aria-expanded="langOpen" @click="langOpen = !langOpen">
+            <button type="button" class="lang-btn" aria-haspopup="listbox" :aria-expanded="langOpen" @click="langOpen = !langOpen; curOpen = false">
               {{ currentLang.label }}<span class="lang-caret">▾</span>
             </button>
             <span v-if="langOpen" class="lang-backdrop" @click="langOpen = false"></span>
@@ -156,7 +197,19 @@ onMounted(async () => {
               </button>
             </span>
           </span>
-          <span class="topbar-cur">{{ siteConfig.currency }}</span>
+          <span v-if="!demoMode" class="lang-menu">
+            <button type="button" class="lang-btn" aria-haspopup="listbox" :aria-expanded="curOpen" @click="curOpen = !curOpen; langOpen = false">
+              {{ displayCode }}<span class="lang-caret">▾</span>
+            </button>
+            <span v-if="curOpen" class="lang-backdrop" @click="curOpen = false"></span>
+            <span v-if="curOpen" class="lang-list tall" role="listbox">
+              <button v-for="c in CURRENCIES" :key="c.code" type="button" role="option" :aria-selected="c.code === displayCode"
+                :class="{ active: c.code === displayCode }" @click="pickCurrency(c.code)">
+                <span>{{ c.code }} {{ c.symbol }}</span><span v-if="c.code === displayCode" class="lang-check">✓</span>
+              </button>
+            </span>
+          </span>
+          <span v-else class="topbar-cur">{{ siteConfig.currency }}</span>
         </span>
       </div>
     </div>
@@ -178,7 +231,7 @@ onMounted(async () => {
 
     <!-- Zone nav -->
     <nav class="zones"><div class="wrap zones-in">
-      <button v-for="z in zones" :key="z" @click.prevent>{{ z }}</button>
+      <button v-for="(item, idx) in zones" :key="idx" @click="onNav(item)">{{ item.label }}</button>
     </div></nav>
 
     <main v-if="view === 'home'">
@@ -202,7 +255,7 @@ onMounted(async () => {
 
           <aside v-if="heroSideVisible" class="hero-side">
             <RfqPanel v-if="theme === 'g' && siteConfig.showRfq" :product-name="rfqProduct" compact />
-            <div v-else-if="siteConfig.showDealer" class="promo">
+            <div v-else-if="siteConfig.showDealer" id="dealer" class="promo">
               <h3>{{ siteConfig.dealerTitle || t('distributorTitle') }}</h3>
               <p>{{ siteConfig.dealerText || t('distributorText') }}</p>
               <button class="btn btn-light" @click="requestQuote(null)">{{ siteConfig.dealerButton || t('talkToSales') }}</button>
@@ -213,13 +266,13 @@ onMounted(async () => {
       </section>
 
       <!-- Brand story (theme F) -->
-      <section v-if="theme === 'f'" class="wrap story">
+      <section v-if="theme === 'f'" id="story" class="wrap story">
         <h2>{{ siteConfig.storyTitle || t('storyTitle') }}</h2>
         <p>{{ siteConfig.storyText || t('storyText') }}</p>
       </section>
 
       <!-- Product grid -->
-      <section class="wrap catalogue">
+      <section id="catalogue" class="wrap catalogue">
         <div class="catalogue-head">
           <h2>{{ resultsTitle }}</h2>
           <span v-if="loading">{{ t('loading') }}</span>
@@ -257,9 +310,10 @@ onMounted(async () => {
         <div class="detail-info">
           <p class="card-cat">{{ tx(selected.category) }}</p>
           <h1>{{ tx(selected.name) }}</h1>
-          <p class="detail-price"><b>${{ selected.price.toFixed(2) }}</b>
-            <s v-if="selected.otPrice > selected.price">${{ selected.otPrice.toFixed(2) }}</s>
+          <p class="detail-price"><b>{{ formatPrice(selected.price) }}</b>
+            <s v-if="selected.otPrice > selected.price">{{ formatPrice(selected.otPrice) }}</s>
             <small v-if="selected.unit && String(selected.unit).trim() && String(selected.unit).trim() !== '无'">/ {{ tx(selected.unit) }}</small></p>
+          <p v-if="isConverted" class="fx-note">{{ t('fxNote', { base: baseCode }) }}</p>
           <p v-if="selected.blurb" class="detail-blurb">{{ tx(selected.blurb) }}</p>
 
           <div v-if="selected.moq" class="detail-tiers">

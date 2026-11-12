@@ -13,12 +13,13 @@ export const siteConfig = reactive({
   showDealer: false, // hero "become a dealer" card; hidden unless the admin turns it on
   whatsapp: '', // shown in the footer when set
   email: '', // shown in the footer when set
-  currency: 'USD', // label only; prices come from the shop API as returned
+  currency: 'USD', // legacy label, shown in the top bar only in demo mode
+  baseCurrency: 'CNY', // currency the stored prices are in; the storefront converts for display (utils/currency.js)
   logo: '', // header logo image URL (also used as favicon); empty = text store name
   defaultLanguage: 'en', // one of en/zh/es/fr/pt; a visitor's own choice wins
   // Homepage content blocks (admin-editable). Empty string / empty array
   // means "use the built-in theme/i18n default" on the storefront.
-  navItems: [], // top navigation [{label, link}]; empty = i18n zone labels
+  navItems: [], // top navigation [{label, link, type?, categoryId?}]; empty = i18n zone labels
   heroEyebrow: '', // overrides the theme label above the headline
   dealerTitle: '', // dealer (distributor) card title
   dealerText: '', // dealer card body text
@@ -37,7 +38,15 @@ function mergeConfig(data) {
       if (Array.isArray(data[k])) {
         siteConfig.navItems = data[k]
           .filter((i) => i && typeof i === 'object')
-          .map((i) => ({ label: String(i.label || ''), link: String(i.link || '') }))
+          .map((i) => {
+            const item = { label: String(i.label || ''), link: String(i.link || '') }
+            const type = String(i.type || '')
+            if (type === 'category' || type === 'anchor' || type === 'external') item.type = type
+            if (i.categoryId !== undefined && i.categoryId !== null && String(i.categoryId) !== '') {
+              item.categoryId = String(i.categoryId)
+            }
+            return item
+          })
       }
       continue
     }

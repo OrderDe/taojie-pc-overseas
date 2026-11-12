@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { t, tx } from '../i18n.js'
 import { siteConfig } from '../siteConfig.js'
+import { formatPrice } from '../utils/currency.js'
 const props = defineProps({ product: { type: Object, required: true }, theme: { type: String, default: 'h' } })
 defineEmits(['open', 'add', 'quote'])
 // Real data often has an empty unit or the literal '无' — show just the price then.
@@ -31,14 +32,14 @@ const unitLabel = computed(() => {
 
       <!-- Theme G: tiered pricing -->
       <div v-if="theme === 'g' && product.moq" class="card-tiers">
-        <span>{{ product.moq }}+ · ${{ product.price.toFixed(2) }}</span>
-        <span>{{ product.moq * 5 }}+ · ${{ (product.price * 0.92).toFixed(2) }}</span>
-        <span>{{ product.moq * 20 }}+ · ${{ (product.price * 0.85).toFixed(2) }}</span>
+        <span>{{ product.moq }}+ · {{ formatPrice(product.price) }}</span>
+        <span>{{ product.moq * 5 }}+ · {{ formatPrice(product.price * 0.92) }}</span>
+        <span>{{ product.moq * 20 }}+ · {{ formatPrice(product.price * 0.85) }}</span>
       </div>
 
       <p class="card-price">
-        <b>${{ product.price.toFixed(2) }}</b>
-        <s v-if="product.otPrice > product.price">${{ product.otPrice.toFixed(2) }}</s>
+        <b>{{ formatPrice(product.price) }}</b>
+        <s v-if="product.otPrice > product.price">{{ formatPrice(product.otPrice) }}</s>
         <small v-if="unitLabel">/ {{ tx(unitLabel) }}</small>
       </p>
       <p class="card-meta">

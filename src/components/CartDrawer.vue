@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { t, tx } from '../i18n.js'
+import { formatPrice } from '../utils/currency.js'
 const props = defineProps({ open: { type: Boolean, default: false }, items: { type: Array, default: () => [] } })
 defineEmits(['close', 'remove', 'clear'])
 const total = computed(() => props.items.reduce((s, i) => s + i.price * i.qty, 0))
@@ -18,13 +19,13 @@ const total = computed(() => props.items.reduce((s, i) => s + i.price * i.qty, 0
       <ul v-else class="drawer-list">
         <li v-for="item in items" :key="item.id">
           <span class="drawer-thumb" :style="{ background: `linear-gradient(135deg, ${item.visual[0]}, ${item.visual[1]})` }">{{ item.visual[2] }}</span>
-          <span class="drawer-info"><b>{{ tx(item.name) }}</b><small>${{ item.price.toFixed(2) }} × {{ item.qty }} {{ tx(item.unit) }}</small></span>
-          <span class="drawer-sum">${{ (item.price * item.qty).toFixed(2) }}</span>
+          <span class="drawer-info"><b>{{ tx(item.name) }}</b><small>{{ formatPrice(item.price) }} × {{ item.qty }} {{ tx(item.unit) }}</small></span>
+          <span class="drawer-sum">{{ formatPrice(item.price * item.qty) }}</span>
           <button class="icon-btn" @click="$emit('remove', item.id)" aria-label="Remove">×</button>
         </li>
       </ul>
       <footer v-if="items.length" class="drawer-foot">
-        <p>{{ t('total') }} <b>${{ total.toFixed(2) }}</b></p>
+        <p>{{ t('total') }} <b>{{ formatPrice(total) }}</b></p>
         <button class="btn btn-ghost btn-sm" @click="$emit('clear')">{{ t('clearCart') }}</button>
       </footer>
     </aside>
