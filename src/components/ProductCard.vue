@@ -1,7 +1,13 @@
 <script setup>
+import { computed } from 'vue'
 import { t, tx } from '../i18n.js'
-defineProps({ product: { type: Object, required: true }, theme: { type: String, default: 'h' } })
+const props = defineProps({ product: { type: Object, required: true }, theme: { type: String, default: 'h' } })
 defineEmits(['open', 'add', 'quote'])
+// Real data often has an empty unit or the literal '无' — show just the price then.
+const unitLabel = computed(() => {
+  const u = String(props.product.unit ?? '').trim()
+  return u && u !== '无' ? u : ''
+})
 </script>
 
 <template>
@@ -31,7 +37,7 @@ defineEmits(['open', 'add', 'quote'])
       <p class="card-price">
         <b>${{ product.price.toFixed(2) }}</b>
         <s v-if="product.otPrice > product.price">${{ product.otPrice.toFixed(2) }}</s>
-        <small>/ {{ tx(product.unit) }}</small>
+        <small v-if="unitLabel">/ {{ tx(unitLabel) }}</small>
       </p>
       <p class="card-meta">
         <span v-if="product.sales">{{ t('sold', { n: product.sales }) }}</span>

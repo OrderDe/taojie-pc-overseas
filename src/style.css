@@ -121,15 +121,16 @@ body { background: #f3f3f5; }
 .icon-btn { border: 0; background: none; font-size: 22px; line-height: 1; color: inherit; }
 
 /* Brands / story */
-.brands { display: flex; gap: 14px; flex-wrap: wrap; padding-top: 54px; padding-bottom: 6px; }
-.brands span { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 14px 22px; font-weight: 800; letter-spacing: .5px; color: var(--muted); }
-.story { padding-top: 26px; max-width: 860px; }
+.brands { display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto; margin: 0 0 16px; padding: 2px 2px 4px; scrollbar-width: none; -ms-overflow-style: none; }
+.brands::-webkit-scrollbar { display: none; }
+.brands span { flex: none; white-space: nowrap; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; letter-spacing: .3px; color: var(--muted); }
+.story { padding-top: 54px; max-width: 860px; }
 .story h2 { font-size: 32px; margin: 0 0 10px; } .story p { font-size: 18px; line-height: 1.7; color: var(--muted); }
 
 /* Catalogue */
-.catalogue { padding-top: 30px; padding-bottom: 44px; }
+.catalogue { padding-top: 54px; padding-bottom: 44px; }
 .catalogue-head { display: flex; justify-content: space-between; align-items: baseline; }
-.catalogue-head h2 { font-size: 30px; margin: 0 0 18px; }
+.catalogue-head h2 { font-size: 30px; margin: 0 0 12px; }
 .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 .site[data-theme='a'] .grid { gap: 12px; }
 .site[data-theme='c'] .grid { gap: 30px; }

@@ -32,6 +32,7 @@ const brands = ref(demoBrands())
 const demoMode = ref(false)
 const loading = ref(true)
 const query = ref('')
+const searchedQuery = ref('')
 const activeCategory = ref('')
 const selected = ref(null)
 const cart = ref([])
@@ -53,6 +54,21 @@ const zones = computed(() => {
   return items.length ? items.map((i) => i.label) : t('zones')
 })
 
+// Real category names are full paths ("汽车油漆 / 1K银粉色母系列 / 1K银粉色母系列");
+// compact UI spots show only the leaf segment.
+function leafName(name) {
+  const parts = String(name || '').split('/').map((s) => s.trim()).filter(Boolean)
+  return parts.length ? parts[parts.length - 1] : String(name || '')
+}
+const resultsTitle = computed(() => {
+  if (searchedQuery.value) return t('searchResults', { q: searchedQuery.value })
+  if (activeCategory.value) {
+    const c = categories.value.find((x) => String(x.id) === activeCategory.value)
+    return c ? leafName(tx(c.name)) : t('categoryTitle')
+  }
+  return t('featured')
+})
+
 function noteDemo(d) { if (d) demoMode.value = true }
 function showToast(msg) { toast.value = msg; setTimeout(() => { toast.value = '' }, 2200) }
 
@@ -64,8 +80,8 @@ async function loadProducts() {
   loading.value = false
 }
 
-async function onSearch() { view.value = 'home'; await loadProducts() }
-async function pickCategory(id) { activeCategory.value = id; view.value = 'home'; await loadProducts() }
+async function onSearch() { view.value = 'home'; searchedQuery.value = query.value.trim(); await loadProducts() }
+async function pickCategory(id) { activeCategory.value = id; searchedQuery.value = ''; view.value = 'home'; await loadProducts() }
 
 async function openProduct(p) {
   const { item, demo } = await fetchProductDetail(p.id)
@@ -152,8 +168,8 @@ onMounted(async () => {
           <aside class="rail">
             <h2>{{ t('allCategories') }}</h2>
             <button :class="{ active: !activeCategory }" @click="pickCategory('')">{{ t('allProducts') }}</button>
-            <button v-for="c in categories" :key="c.id" :class="{ active: activeCategory === String(c.id) }" @click="pickCategory(String(c.id))">
-              {{ tx(c.name) }} <span v-if="c.count">›</span>
+            <button v-for="c in categories" :key="c.id" :class="{ active: activeCategory === String(c.id) }" :title="tx(c.name)" @click="pickCategory(String(c.id))">
+              {{ leafName(tx(c.name)) }} <span v-if="c.count">›</span>
             </button>
           </aside>
 
@@ -181,11 +197,6 @@ onMounted(async () => {
         </form>
       </section>
 
-      <!-- Brand strip -->
-      <section class="wrap brands">
-        <span v-for="b in brands" :key="b">{{ b }}</span>
-      </section>
-
       <!-- Brand story (theme F) -->
       <section v-if="theme === 'f'" class="wrap story">
         <h2>{{ siteConfig.storyTitle || t('storyTitle') }}</h2>
@@ -195,9 +206,12 @@ onMounted(async () => {
       <!-- Product grid -->
       <section class="wrap catalogue">
         <div class="catalogue-head">
-          <h2>{{ activeCategory ? t('categoryTitle') : t('featured') }}</h2>
+          <h2>{{ resultsTitle }}</h2>
           <span v-if="loading">{{ t('loading') }}</span>
           <span v-else>{{ t('productsCount', { n: products.length }) }}</span>
+        </div>
+        <div v-if="brands.length" class="brands">
+          <span v-for="b in brands" :key="b">{{ b }}</span>
         </div>
         <div v-if="!loading && !products.length" class="empty">{{ t('empty') }}</div>
         <div class="grid">
@@ -226,7 +240,7 @@ onMounted(async () => {
           <h1>{{ tx(selected.name) }}</h1>
           <p class="detail-price"><b>${{ selected.price.toFixed(2) }}</b>
             <s v-if="selected.otPrice > selected.price">${{ selected.otPrice.toFixed(2) }}</s>
-            <small>/ {{ tx(selected.unit) }}</small></p>
+            <small v-if="selected.unit && String(selected.unit).trim() && String(selected.unit).trim() !== '无'">/ {{ tx(selected.unit) }}</small></p>
           <p v-if="selected.blurb" class="detail-blurb">{{ tx(selected.blurb) }}</p>
 
           <div v-if="selected.moq" class="detail-tiers">
