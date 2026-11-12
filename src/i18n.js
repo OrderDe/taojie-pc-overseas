@@ -94,7 +94,13 @@ const MESSAGES = {
     sendRfq: 'Send RFQ', rfqDoneTitle: 'Thanks — RFQ received.',
     rfqDoneText: 'It is saved on this device only (demo). In production this connects to our sales team.',
     rfqDoneServer: 'Our sales team will reply within one business day.',
-    writeAnother: 'Write another'
+    writeAnother: 'Write another',
+    chatOpen: 'Chat with us', chatTitle: 'Online Support',
+    chatNameLabel: 'Tell us your name so we can greet you properly.',
+    chatNamePh: 'Your name (optional)', chatStart: 'Start chat', chatSkip: 'Skip — just chat',
+    chatInputPh: 'Type a message…', chatSend: 'Send', chatAgent: 'Support', chatYou: 'You',
+    chatWelcome: 'Hi! How can we help? Ask us about products, prices or shipping.',
+    chatOffline: 'Cannot reach the chat service right now — please try again later, or send an RFQ instead.'
   },
   zh: {
     announcement: '淘街海外站 · 从广州发货，配送全球',
@@ -134,7 +140,13 @@ const MESSAGES = {
     sendRfq: '发送询价', rfqDoneTitle: '已收到，谢谢。',
     rfqDoneText: '询价只保存在本设备上（演示）。正式上线后会直接对接我们的销售团队。',
     rfqDoneServer: '销售团队会在一个工作日内回复你。',
-    writeAnother: '再写一条'
+    writeAnother: '再写一条',
+    chatOpen: '在线咨询', chatTitle: '在线客服',
+    chatNameLabel: '留个称呼，方便我们和您打招呼。',
+    chatNamePh: '您的称呼（可不填）', chatStart: '开始咨询', chatSkip: '跳过，直接咨询',
+    chatInputPh: '输入消息…', chatSend: '发送', chatAgent: '客服', chatYou: '我',
+    chatWelcome: '您好！有什么可以帮您？产品、价格、物流都可以问。',
+    chatOffline: '暂时连不上聊天服务，请稍后再试，或改用询价表单联系我们。'
   },
   es: {
     announcement: 'Taojie Internacional · Envíos a todo el mundo desde Guangzhou',
@@ -174,7 +186,13 @@ const MESSAGES = {
     sendRfq: 'Enviar consulta', rfqDoneTitle: 'Gracias — consulta recibida.',
     rfqDoneText: 'Se guarda solo en este dispositivo (demo). En producción llega directo a nuestro equipo de ventas.',
     rfqDoneServer: 'Nuestro equipo de ventas responderá en un día laborable.',
-    writeAnother: 'Escribir otra'
+    writeAnother: 'Escribir otra',
+    chatOpen: 'Chatea con nosotros', chatTitle: 'Soporte en línea',
+    chatNameLabel: 'Díganos su nombre para saludarle como corresponde.',
+    chatNamePh: 'Su nombre (opcional)', chatStart: 'Iniciar chat', chatSkip: 'Omitir y chatear',
+    chatInputPh: 'Escriba un mensaje…', chatSend: 'Enviar', chatAgent: 'Soporte', chatYou: 'Usted',
+    chatWelcome: '¡Hola! ¿En qué podemos ayudarle? Pregunte por productos, precios o envíos.',
+    chatOffline: 'No se puede conectar con el chat ahora — inténtelo más tarde o envíe una solicitud de cotización.'
   },
   fr: {
     announcement: 'Taojie International · Expédition mondiale depuis Guangzhou',
@@ -214,7 +232,13 @@ const MESSAGES = {
     sendRfq: 'Envoyer la demande', rfqDoneTitle: 'Merci — demande reçue.',
     rfqDoneText: "Elle est enregistrée sur cet appareil uniquement (démo). En production, elle arrive directement à notre équipe commerciale.",
     rfqDoneServer: 'Notre équipe commerciale répondra sous un jour ouvrable.',
-    writeAnother: 'En écrire une autre'
+    writeAnother: 'En écrire une autre',
+    chatOpen: 'Discutez avec nous', chatTitle: 'Assistance en ligne',
+    chatNameLabel: 'Dites-nous votre nom pour mieux vous accueillir.',
+    chatNamePh: 'Votre nom (facultatif)', chatStart: 'Démarrer la discussion', chatSkip: 'Passer — discuter directement',
+    chatInputPh: 'Écrivez un message…', chatSend: 'Envoyer', chatAgent: 'Conseiller', chatYou: 'Vous',
+    chatWelcome: 'Bonjour ! Comment pouvons-nous vous aider ? Produits, prix ou livraison, demandez-nous.',
+    chatOffline: 'Le service de discussion est injoignable pour le moment — réessayez plus tard ou envoyez une demande de devis.'
   },
   pt: {
     announcement: 'Taojie Internacional · Enviamos de Guangzhou para o mundo todo',
@@ -254,7 +278,13 @@ const MESSAGES = {
     sendRfq: 'Enviar consulta', rfqDoneTitle: 'Obrigado — consulta recebida.',
     rfqDoneText: 'Ela fica salva só neste aparelho (demo). Em produção, chega direto à nossa equipe de vendas.',
     rfqDoneServer: 'Nossa equipe de vendas responderá em um dia útil.',
-    writeAnother: 'Escrever outra'
+    writeAnother: 'Escrever outra',
+    chatOpen: 'Fale conosco', chatTitle: 'Suporte online',
+    chatNameLabel: 'Diga-nos seu nome para podermos atendê-lo melhor.',
+    chatNamePh: 'Seu nome (opcional)', chatStart: 'Iniciar conversa', chatSkip: 'Pular — só conversar',
+    chatInputPh: 'Digite uma mensagem…', chatSend: 'Enviar', chatAgent: 'Suporte', chatYou: 'Você',
+    chatWelcome: 'Olá! Como podemos ajudar? Pergunte sobre produtos, preços ou frete.',
+    chatOffline: 'Não foi possível conectar ao chat agora — tente mais tarde ou envie uma solicitação de cotação.'
   }
 }
 

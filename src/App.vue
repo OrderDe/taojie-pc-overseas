@@ -3,7 +3,8 @@ import { computed, onMounted, ref } from 'vue'
 import ProductCard from './components/ProductCard.vue'
 import CartDrawer from './components/CartDrawer.vue'
 import RfqPanel from './components/RfqPanel.vue'
-import { fetchCategories, fetchKeywords, fetchProducts, fetchProductDetail, demoBrands } from './api.js'
+import ChatWidget from './components/ChatWidget.vue'
+import { fetchCategories, fetchKeywords, fetchProducts, fetchProductDetail, fetchBrands, demoBrands } from './api.js'
 import { siteConfig } from './siteConfig.js'
 import { LANGS, locale, setLocale, t, tx, themeText } from './i18n.js'
 
@@ -27,7 +28,7 @@ const view = ref('home') // 'home' | 'detail'
 const categories = ref([])
 const products = ref([])
 const keywords = ref([])
-const brands = demoBrands()
+const brands = ref(demoBrands())
 const demoMode = ref(false)
 const loading = ref(true)
 const query = ref('')
@@ -42,7 +43,11 @@ const cartCount = computed(() => cart.value.reduce((s, i) => s + i.qty, 0))
 const meta = computed(() => THEMES[theme.value])
 const heroTitle = computed(() => siteConfig.heroTitle || themeText(theme.value).headline)
 const heroSub = computed(() => siteConfig.heroSubtitle || themeText(theme.value).sub)
-const zones = computed(() => t('zones'))
+// Top navigation: admin-configured navItems win; empty = i18n defaults.
+const zones = computed(() => {
+  const items = (siteConfig.navItems || []).filter((i) => i && i.label)
+  return items.length ? items.map((i) => i.label) : t('zones')
+})
 
 function noteDemo(d) { if (d) demoMode.value = true }
 function showToast(msg) { toast.value = msg; setTimeout(() => { toast.value = '' }, 2200) }
@@ -80,9 +85,10 @@ function requestQuote(p) {
 }
 
 onMounted(async () => {
-  const [cats, kws] = await Promise.all([fetchCategories(), fetchKeywords()])
+  const [cats, kws, brs] = await Promise.all([fetchCategories(), fetchKeywords(), fetchBrands()])
   categories.value = cats.items
   keywords.value = kws.items
+  brands.value = brs.items
   noteDemo(cats.demo || kws.demo)
   await loadProducts()
 })
@@ -139,7 +145,7 @@ onMounted(async () => {
           </aside>
 
           <div class="hero-main">
-            <p class="hero-eyebrow">{{ meta.label }}</p>
+            <p class="hero-eyebrow">{{ siteConfig.heroEyebrow || meta.label }}</p>
             <h1>{{ heroTitle }}</h1>
             <p class="hero-sub">{{ heroSub }}</p>
             <p class="hero-stats" v-if="theme === 'b' || theme === 'h'"><b>1,038</b> {{ t('statFormulas') }} <b>128</b> {{ t('statToners') }} <b>50+</b> {{ t('statMarkets') }}</p>
@@ -148,10 +154,10 @@ onMounted(async () => {
           <aside class="hero-side">
             <RfqPanel v-if="theme === 'g' && siteConfig.showRfq" :product-name="rfqProduct" compact />
             <div v-else class="promo">
-              <h3>{{ t('distributorTitle') }}</h3>
-              <p>{{ t('distributorText') }}</p>
-              <button class="btn btn-light" @click="requestQuote(null)">{{ t('talkToSales') }}</button>
-              <p class="promo-tel">{{ t('exportHotline') }}<br /><b>+86 XXX XXXX XXXX</b></p>
+              <h3>{{ siteConfig.dealerTitle || t('distributorTitle') }}</h3>
+              <p>{{ siteConfig.dealerText || t('distributorText') }}</p>
+              <button class="btn btn-light" @click="requestQuote(null)">{{ siteConfig.dealerButton || t('talkToSales') }}</button>
+              <p class="promo-tel">{{ t('exportHotline') }}<br /><b>{{ siteConfig.hotline || '+86 XXX XXXX XXXX' }}</b></p>
             </div>
           </aside>
         </div>
@@ -169,8 +175,8 @@ onMounted(async () => {
 
       <!-- Brand story (theme F) -->
       <section v-if="theme === 'f'" class="wrap story">
-        <h2>{{ t('storyTitle') }}</h2>
-        <p>{{ t('storyText') }}</p>
+        <h2>{{ siteConfig.storyTitle || t('storyTitle') }}</h2>
+        <p>{{ siteConfig.storyText || t('storyText') }}</p>
       </section>
 
       <!-- Product grid -->
@@ -255,6 +261,7 @@ onMounted(async () => {
     </footer>
 
     <CartDrawer :open="cartOpen" :items="cart" @close="cartOpen = false" @remove="removeFromCart" @clear="cart = []" />
+    <ChatWidget />
     <div v-if="toast" class="toast">{{ toast }}</div>
   </div>
 </template>

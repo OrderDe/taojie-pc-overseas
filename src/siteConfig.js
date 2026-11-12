@@ -13,11 +13,31 @@ export const siteConfig = reactive({
   email: '', // shown in the footer when set
   currency: 'USD', // label only; prices come from the shop API as returned
   defaultLanguage: 'en', // one of en/zh/es/fr/pt; a visitor's own choice wins
+  // Homepage content blocks (admin-editable). Empty string / empty array
+  // means "use the built-in theme/i18n default" on the storefront.
+  navItems: [], // top navigation [{label, link}]; empty = i18n zone labels
+  heroEyebrow: '', // overrides the theme label above the headline
+  dealerTitle: '', // dealer (distributor) card title
+  dealerText: '', // dealer card body text
+  dealerButton: '', // dealer card button label
+  hotline: '', // export hotline phone shown on the dealer card
+  storyTitle: '', // brand story title (theme F section)
+  storyText: '' // brand story body text
 })
 
 function mergeConfig(data) {
   if (!data || typeof data !== 'object') return
   for (const k of Object.keys(siteConfig)) {
+    // navItems is an array: any array value wins, including an empty one
+    // (the admin may deliberately clear the navigation).
+    if (k === 'navItems') {
+      if (Array.isArray(data[k])) {
+        siteConfig.navItems = data[k]
+          .filter((i) => i && typeof i === 'object')
+          .map((i) => ({ label: String(i.label || ''), link: String(i.link || '') }))
+      }
+      continue
+    }
     if (data[k] === undefined || data[k] === null || data[k] === '') continue
     if (k === 'defaultTheme') {
       const theme = String(data[k]).toLowerCase()

@@ -173,4 +173,65 @@ export async function submitRfq(payload) {
   }
 }
 
+// ---- Online chat (visitor side) ----
+// Identity is a random session token kept in localStorage by the widget;
+// the backend unwraps the same way as the rest of the API (Node returns
+// plain JSON, Java wraps in CommonResult { code, message, data }).
+async function chatFetch(path, opts = {}) {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS)
+  try {
+    const res = await fetch(`${API_BASE}/${path}`, {
+      signal: ctrl.signal,
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      ...opts
+    })
+    let body = null
+    try { body = await res.json() } catch { /* empty body */ }
+    if (body && typeof body === 'object' && 'code' in body && 'data' in body) {
+      if (body.code !== 200) throw new Error(body.message || 'chat request failed')
+      return body.data
+    }
+    if (!res.ok) throw new Error((body && body.error) || `HTTP ${res.status}`)
+    return body
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+// Create a chat session, or reuse the existing one when `token` is known.
+export async function chatStart({ name = '', token = '' } = {}) {
+  return chatFetch('chat/start', {
+    method: 'POST',
+    body: JSON.stringify({ name, token, lang: locale.value })
+  })
+}
+
+export async function chatSend(token, body) {
+  return chatFetch('chat/messages', {
+    method: 'POST',
+    body: JSON.stringify({ token, body })
+  })
+}
+
+// Pull this session's messages, incrementally when afterId is given.
+export async function chatPull(token, afterId = 0) {
+  return chatFetch(`chat/messages?token=${encodeURIComponent(token)}&afterId=${Math.max(0, afterId || 0)}`)
+}
+
+// Brand strip names from the backend's public brands endpoint; falls back
+// to the bundled sample list when the backend is unreachable or has none.
+export async function fetchBrands() {
+  try {
+    const data = await getJson('brands', { lang: locale.value })
+    const items = listFrom(data)
+      .map((b) => String(typeof b === 'string' ? b : pick(b, ['name', 'label', 'title'], '')))
+      .filter(Boolean)
+    if (items.length) return { items, demo: false }
+    throw new Error('empty brands')
+  } catch {
+    return { items: sampleBrands, demo: true }
+  }
+}
+
 export function demoBrands() { return sampleBrands }
