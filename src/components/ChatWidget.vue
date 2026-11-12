@@ -204,7 +204,7 @@ onBeforeUnmount(() => {
    themes (e.g. F) set a serif body font, which makes chat text look dated.
    Nothing here touches the site theme. */
 .chat-widget {
-  position: fixed; right: 22px; bottom: 22px; z-index: 60; font-size: 14px;
+  position: fixed; inset-inline-end: 22px; bottom: 22px; z-index: 60; font-size: 14px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   color: #1f2430;
 }
@@ -215,7 +215,7 @@ onBeforeUnmount(() => {
   box-shadow: 0 10px 28px rgba(0, 0, 0, .28);
 }
 .chat-badge {
-  position: absolute; top: -7px; right: -5px; min-width: 20px; height: 20px;
+  position: absolute; top: -7px; inset-inline-end: -5px; min-width: 20px; height: 20px;
   border-radius: 999px; background: #e1251b; color: #fff; font-size: 12px;
   line-height: 20px; text-align: center; padding: 0 5px;
 }
@@ -246,8 +246,8 @@ onBeforeUnmount(() => {
   font-size: 14.5px; line-height: 1.6; color: #1f2430;
   white-space: pre-wrap; word-break: break-word; background: rgba(0, 0, 0, .06);
 }
-.chat-msg.visitor { align-self: flex-end; text-align: right; }
-.chat-msg.visitor p { background: var(--brand); color: #fff; text-align: left; }
+.chat-msg.visitor { align-self: flex-end; text-align: end; }
+.chat-msg.visitor p { background: var(--brand); color: #fff; text-align: start; }
 .chat-who { font-size: 11px; color: #8a8fa3; }
 .chat-typing { font-style: italic; opacity: .75; }
 .chat-offline { margin: 0; padding: 8px 14px; font-size: 12px; color: #b3261e; }
