@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import ProductCard from './components/ProductCard.vue'
 import CartDrawer from './components/CartDrawer.vue'
 import RfqPanel from './components/RfqPanel.vue'
@@ -40,6 +40,19 @@ const cart = ref([])
 const cartOpen = ref(false)
 const rfqProduct = ref('')
 const toast = ref('')
+
+// A configured logo doubles as the browser tab favicon; an empty logo
+// leaves the built-in favicon untouched.
+watch(() => siteConfig.logo, (logo) => {
+  if (!logo) return
+  let link = document.querySelector('link[rel="icon"]')
+  if (!link) {
+    link = document.createElement('link')
+    link.rel = 'icon'
+    document.head.appendChild(link)
+  }
+  link.href = logo
+}, { immediate: true })
 
 const langOpen = ref(false)
 const currentLang = computed(() => LANGS.find((l) => l.code === locale.value) || LANGS[0])
@@ -147,7 +160,7 @@ onMounted(async () => {
     <!-- Header -->
     <header class="header">
       <div class="wrap header-in">
-        <a class="logo" href="#" @click.prevent="view = 'home'">TAOJIE<span class="logo-dot">.</span></a>
+        <a class="logo" href="#" @click.prevent="view = 'home'"><img v-if="siteConfig.logo" class="logo-img" :src="siteConfig.logo" alt="TAOJIE" /><template v-else>TAOJIE<span class="logo-dot">.</span></template></a>
         <form class="search" @submit.prevent="onSearch">
           <input v-model="query" :placeholder="t('searchPh')" />
           <button type="submit">{{ t('search') }}</button>

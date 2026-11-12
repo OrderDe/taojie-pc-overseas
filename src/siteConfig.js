@@ -13,6 +13,7 @@ export const siteConfig = reactive({
   whatsapp: '', // shown in the footer when set
   email: '', // shown in the footer when set
   currency: 'USD', // label only; prices come from the shop API as returned
+  logo: '', // header logo image URL (also used as favicon); empty = text store name
   defaultLanguage: 'en', // one of en/zh/es/fr/pt; a visitor's own choice wins
   // Homepage content blocks (admin-editable). Empty string / empty array
   // means "use the built-in theme/i18n default" on the storefront.

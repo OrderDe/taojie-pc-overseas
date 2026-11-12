@@ -64,6 +64,7 @@ body { background: #f3f3f5; }
 .header-in { display: flex; align-items: center; gap: 28px; padding-top: 18px; padding-bottom: 14px; }
 .logo { font-size: 34px; font-weight: 900; letter-spacing: 1px; color: var(--brand); white-space: nowrap; }
 .logo-dot { color: var(--accent); }
+.logo-img { display: block; max-height: 40px; width: auto; object-fit: contain; }
 .search { flex: 1; display: flex; border: 2px solid var(--brand); border-radius: 999px; overflow: hidden; max-width: 640px; }
 .search input { flex: 1; border: 0; padding: 12px 18px; font-size: 15px; outline: none; background: transparent; color: var(--ink); }
 .search button { border: 0; background: var(--brand); color: #fff; padding: 0 26px; font-weight: 700; }
