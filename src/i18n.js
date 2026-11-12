@@ -100,7 +100,8 @@ const MESSAGES = {
     chatNamePh: 'Your name (optional)', chatStart: 'Start chat', chatSkip: 'Skip — just chat',
     chatInputPh: 'Type a message…', chatSend: 'Send', chatAgent: 'Support', chatYou: 'You',
     chatWelcome: 'Hi! How can we help? Ask us about products, prices or shipping.',
-    chatOffline: 'Cannot reach the chat service right now — please try again later, or send an RFQ instead.'
+    chatOffline: 'Cannot reach the chat service right now — please try again later, or send an RFQ instead.',
+    chatTyping: 'Support is typing…'
   },
   zh: {
     announcement: '淘街海外站 · 从广州发货，配送全球',
@@ -146,7 +147,8 @@ const MESSAGES = {
     chatNamePh: '您的称呼（可不填）', chatStart: '开始咨询', chatSkip: '跳过，直接咨询',
     chatInputPh: '输入消息…', chatSend: '发送', chatAgent: '客服', chatYou: '我',
     chatWelcome: '您好！有什么可以帮您？产品、价格、物流都可以问。',
-    chatOffline: '暂时连不上聊天服务，请稍后再试，或改用询价表单联系我们。'
+    chatOffline: '暂时连不上聊天服务，请稍后再试，或改用询价表单联系我们。',
+    chatTyping: '客服正在输入…'
   },
   es: {
     announcement: 'Taojie Internacional · Envíos a todo el mundo desde Guangzhou',
@@ -192,7 +194,8 @@ const MESSAGES = {
     chatNamePh: 'Su nombre (opcional)', chatStart: 'Iniciar chat', chatSkip: 'Omitir y chatear',
     chatInputPh: 'Escriba un mensaje…', chatSend: 'Enviar', chatAgent: 'Soporte', chatYou: 'Usted',
     chatWelcome: '¡Hola! ¿En qué podemos ayudarle? Pregunte por productos, precios o envíos.',
-    chatOffline: 'No se puede conectar con el chat ahora — inténtelo más tarde o envíe una solicitud de cotización.'
+    chatOffline: 'No se puede conectar con el chat ahora — inténtelo más tarde o envíe una solicitud de cotización.',
+    chatTyping: 'El soporte está escribiendo…'
   },
   fr: {
     announcement: 'Taojie International · Expédition mondiale depuis Guangzhou',
@@ -238,7 +241,8 @@ const MESSAGES = {
     chatNamePh: 'Votre nom (facultatif)', chatStart: 'Démarrer la discussion', chatSkip: 'Passer — discuter directement',
     chatInputPh: 'Écrivez un message…', chatSend: 'Envoyer', chatAgent: 'Conseiller', chatYou: 'Vous',
     chatWelcome: 'Bonjour ! Comment pouvons-nous vous aider ? Produits, prix ou livraison, demandez-nous.',
-    chatOffline: 'Le service de discussion est injoignable pour le moment — réessayez plus tard ou envoyez une demande de devis.'
+    chatOffline: 'Le service de discussion est injoignable pour le moment — réessayez plus tard ou envoyez une demande de devis.',
+    chatTyping: 'L’assistance est en train d’écrire…'
   },
   pt: {
     announcement: 'Taojie Internacional · Enviamos de Guangzhou para o mundo todo',
@@ -284,7 +288,8 @@ const MESSAGES = {
     chatNamePh: 'Seu nome (opcional)', chatStart: 'Iniciar conversa', chatSkip: 'Pular — só conversar',
     chatInputPh: 'Digite uma mensagem…', chatSend: 'Enviar', chatAgent: 'Suporte', chatYou: 'Você',
     chatWelcome: 'Olá! Como podemos ajudar? Pergunte sobre produtos, preços ou frete.',
-    chatOffline: 'Não foi possível conectar ao chat agora — tente mais tarde ou envie uma solicitação de cotação.'
+    chatOffline: 'Não foi possível conectar ao chat agora — tente mais tarde ou envie uma solicitação de cotação.',
+    chatTyping: 'O suporte está digitando…'
   }
 }
 

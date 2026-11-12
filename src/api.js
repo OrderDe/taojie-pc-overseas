@@ -200,10 +200,29 @@ async function chatFetch(path, opts = {}) {
 }
 
 // Create a chat session, or reuse the existing one when `token` is known.
-export async function chatStart({ name = '', token = '' } = {}) {
+// The widget also reports where the visitor came from and which page they
+// are on, so the admin console can show a small visitor profile.
+export async function chatStart({ name = '', token = '', referrer = '', page = '', pageTitle = '' } = {}) {
   return chatFetch('chat/start', {
     method: 'POST',
-    body: JSON.stringify({ name, token, lang: locale.value })
+    body: JSON.stringify({ name, token, lang: locale.value, referrer, page, pageTitle })
+  })
+}
+
+// Heartbeat: keeps the session "online" in the admin console and follows
+// the visitor when they move to another page.
+export async function chatPing(token, { page = '', pageTitle = '' } = {}) {
+  return chatFetch('chat/ping', {
+    method: 'POST',
+    body: JSON.stringify({ token, page, pageTitle })
+  })
+}
+
+// "Visitor is typing…" signal (callers throttle this).
+export async function chatTyping(token) {
+  return chatFetch('chat/typing', {
+    method: 'POST',
+    body: JSON.stringify({ token })
   })
 }
 
