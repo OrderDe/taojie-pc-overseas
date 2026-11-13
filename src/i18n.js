@@ -134,7 +134,7 @@ const MESSAGES = {
     chatOpen: 'Chat with us', chatTitle: 'Online Support',
     chatNameLabel: 'Tell us your name so we can greet you properly.',
     chatNamePh: 'Your name (optional)', chatStart: 'Start chat', chatSkip: 'Skip — just chat',
-    chatInputPh: 'Type a message…', chatSend: 'Send', chatAgent: 'Support', chatYou: 'You',
+    chatInputPh: 'Type a message…', chatSend: 'Send', chatAgent: 'Support', chatYou: 'You', chatProductLabel: 'You are asking about', chatProductRemove: 'Remove',
     chatWelcome: 'Hi! How can we help? Ask us about products, prices or shipping.',
     chatOffline: 'Cannot reach the chat service right now — please try again later, or send an RFQ instead.',
     chatTyping: 'Support is typing…'
@@ -184,7 +184,7 @@ const MESSAGES = {
     chatOpen: '在线咨询', chatTitle: '在线客服',
     chatNameLabel: '留个称呼，方便我们和您打招呼。',
     chatNamePh: '您的称呼（可不填）', chatStart: '开始咨询', chatSkip: '跳过，直接咨询',
-    chatInputPh: '输入消息…', chatSend: '发送', chatAgent: '客服', chatYou: '我',
+    chatInputPh: '输入消息…', chatSend: '发送', chatAgent: '客服', chatYou: '我', chatProductLabel: '正在咨询', chatProductRemove: '移除',
     chatWelcome: '您好！有什么可以帮您？产品、价格、物流都可以问。',
     chatOffline: '暂时连不上聊天服务，请稍后再试，或改用询价表单联系我们。',
     chatTyping: '客服正在输入…'
@@ -234,7 +234,7 @@ const MESSAGES = {
     chatOpen: 'Chatea con nosotros', chatTitle: 'Soporte en línea',
     chatNameLabel: 'Díganos su nombre para saludarle como corresponde.',
     chatNamePh: 'Su nombre (opcional)', chatStart: 'Iniciar chat', chatSkip: 'Omitir y chatear',
-    chatInputPh: 'Escriba un mensaje…', chatSend: 'Enviar', chatAgent: 'Soporte', chatYou: 'Usted',
+    chatInputPh: 'Escriba un mensaje…', chatSend: 'Enviar', chatAgent: 'Soporte', chatYou: 'Usted', chatProductLabel: 'Está consultando sobre', chatProductRemove: 'Quitar',
     chatWelcome: '¡Hola! ¿En qué podemos ayudarle? Pregunte por productos, precios o envíos.',
     chatOffline: 'No se puede conectar con el chat ahora — inténtelo más tarde o envíe una solicitud de cotización.',
     chatTyping: 'El soporte está escribiendo…'
@@ -284,7 +284,7 @@ const MESSAGES = {
     chatOpen: 'Discutez avec nous', chatTitle: 'Assistance en ligne',
     chatNameLabel: 'Dites-nous votre nom pour mieux vous accueillir.',
     chatNamePh: 'Votre nom (facultatif)', chatStart: 'Démarrer la discussion', chatSkip: 'Passer — discuter directement',
-    chatInputPh: 'Écrivez un message…', chatSend: 'Envoyer', chatAgent: 'Conseiller', chatYou: 'Vous',
+    chatInputPh: 'Écrivez un message…', chatSend: 'Envoyer', chatAgent: 'Conseiller', chatYou: 'Vous', chatProductLabel: 'Vous demandez des infos sur', chatProductRemove: 'Retirer',
     chatWelcome: 'Bonjour ! Comment pouvons-nous vous aider ? Produits, prix ou livraison, demandez-nous.',
     chatOffline: 'Le service de discussion est injoignable pour le moment — réessayez plus tard ou envoyez une demande de devis.',
     chatTyping: 'L’assistance est en train d’écrire…'
@@ -334,7 +334,7 @@ const MESSAGES = {
     chatOpen: 'Fale conosco', chatTitle: 'Suporte online',
     chatNameLabel: 'Diga-nos seu nome para podermos atendê-lo melhor.',
     chatNamePh: 'Seu nome (opcional)', chatStart: 'Iniciar conversa', chatSkip: 'Pular — só conversar',
-    chatInputPh: 'Digite uma mensagem…', chatSend: 'Enviar', chatAgent: 'Suporte', chatYou: 'Você',
+    chatInputPh: 'Digite uma mensagem…', chatSend: 'Enviar', chatAgent: 'Suporte', chatYou: 'Você', chatProductLabel: 'Você está perguntando sobre', chatProductRemove: 'Remover',
     chatWelcome: 'Olá! Como podemos ajudar? Pergunte sobre produtos, preços ou frete.',
     chatOffline: 'Não foi possível conectar ao chat agora — tente mais tarde ou envie uma solicitação de cotação.',
     chatTyping: 'O suporte está digitando…'
@@ -384,7 +384,7 @@ const MESSAGES = {
     chatOpen: 'Chat dengan kami', chatTitle: 'Dukungan Online',
     chatNameLabel: 'Beri tahu nama Anda agar kami bisa menyapa dengan tepat.',
     chatNamePh: 'Nama Anda (opsional)', chatStart: 'Mulai chat', chatSkip: 'Lewati — langsung chat',
-    chatInputPh: 'Ketik pesan…', chatSend: 'Kirim', chatAgent: 'Dukungan', chatYou: 'Anda',
+    chatInputPh: 'Ketik pesan…', chatSend: 'Kirim', chatAgent: 'Dukungan', chatYou: 'Anda', chatProductLabel: 'Anda bertanya tentang', chatProductRemove: 'Hapus',
     chatWelcome: 'Halo! Ada yang bisa kami bantu? Tanyakan soal produk, harga, atau pengiriman.',
     chatOffline: 'Layanan chat sedang tidak terjangkau — coba lagi nanti, atau kirim RFQ saja.',
     chatTyping: 'Dukungan sedang mengetik…'
@@ -434,7 +434,7 @@ const MESSAGES = {
     chatOpen: 'Sembang dengan kami', chatTitle: 'Sokongan Dalam Talian',
     chatNameLabel: 'Beritahu nama anda supaya kami dapat menyapa dengan betul.',
     chatNamePh: 'Nama anda (pilihan)', chatStart: 'Mula sembang', chatSkip: 'Langkau — terus sembang',
-    chatInputPh: 'Taip mesej…', chatSend: 'Hantar', chatAgent: 'Sokongan', chatYou: 'Anda',
+    chatInputPh: 'Taip mesej…', chatSend: 'Hantar', chatAgent: 'Sokongan', chatYou: 'Anda', chatProductLabel: 'Anda bertanya tentang', chatProductRemove: 'Buang',
     chatWelcome: 'Hai! Apa yang boleh kami bantu? Tanya tentang produk, harga atau penghantaran.',
     chatOffline: 'Perkhidmatan sembang tidak dapat dicapai sekarang — cuba lagi nanti, atau hantar RFQ.',
     chatTyping: 'Sokongan sedang menaip…'
@@ -484,7 +484,7 @@ const MESSAGES = {
     chatOpen: 'Chat với chúng tôi', chatTitle: 'Hỗ trợ trực tuyến',
     chatNameLabel: 'Cho chúng tôi biết tên của bạn để xưng hô cho đúng.',
     chatNamePh: 'Tên của bạn (không bắt buộc)', chatStart: 'Bắt đầu chat', chatSkip: 'Bỏ qua — chat ngay',
-    chatInputPh: 'Nhập tin nhắn…', chatSend: 'Gửi', chatAgent: 'Hỗ trợ', chatYou: 'Bạn',
+    chatInputPh: 'Nhập tin nhắn…', chatSend: 'Gửi', chatAgent: 'Hỗ trợ', chatYou: 'Bạn', chatProductLabel: 'Bạn đang hỏi về', chatProductRemove: 'Xóa',
     chatWelcome: 'Xin chào! Chúng tôi có thể giúp gì? Cứ hỏi về sản phẩm, giá cả hoặc vận chuyển.',
     chatOffline: 'Hiện không kết nối được dịch vụ chat — vui lòng thử lại sau, hoặc gửi RFQ thay thế.',
     chatTyping: 'Hỗ trợ đang nhập…'
@@ -534,7 +534,7 @@ const MESSAGES = {
     chatOpen: 'แชทกับเรา', chatTitle: 'ฝ่ายสนับสนุนออนไลน์',
     chatNameLabel: 'บอกชื่อของคุณให้เราทราบ เพื่อให้เราทักทายได้อย่างเหมาะสม',
     chatNamePh: 'ชื่อของคุณ (ไม่บังคับ)', chatStart: 'เริ่มแชท', chatSkip: 'ข้าม — แชทเลย',
-    chatInputPh: 'พิมพ์ข้อความ…', chatSend: 'ส่ง', chatAgent: 'ฝ่ายสนับสนุน', chatYou: 'คุณ',
+    chatInputPh: 'พิมพ์ข้อความ…', chatSend: 'ส่ง', chatAgent: 'ฝ่ายสนับสนุน', chatYou: 'คุณ', chatProductLabel: 'คุณกำลังสอบถามเกี่ยวกับ', chatProductRemove: 'นำออก',
     chatWelcome: 'สวัสดี! มีอะไรให้เราช่วยไหม? ถามเรื่องสินค้า ราคา หรือการจัดส่งได้เลย',
     chatOffline: 'ขณะนี้เชื่อมต่อบริการแชทไม่ได้ — โปรดลองอีกครั้งภายหลัง หรือส่ง RFQ แทน',
     chatTyping: 'ฝ่ายสนับสนุนกำลังพิมพ์…'
@@ -584,7 +584,7 @@ const MESSAGES = {
     chatOpen: 'تحدث معنا', chatTitle: 'الدعم عبر الإنترنت',
     chatNameLabel: 'أخبرنا باسمك لنرحّب بك كما ينبغي.',
     chatNamePh: 'اسمك (اختياري)', chatStart: 'بدء المحادثة', chatSkip: 'تخطَّ — تحدث مباشرة',
-    chatInputPh: 'اكتب رسالة…', chatSend: 'إرسال', chatAgent: 'الدعم', chatYou: 'أنت',
+    chatInputPh: 'اكتب رسالة…', chatSend: 'إرسال', chatAgent: 'الدعم', chatYou: 'أنت', chatProductLabel: 'أنت تستفسر عن', chatProductRemove: 'إزالة',
     chatWelcome: 'مرحبًا! كيف يمكننا مساعدتك؟ اسألنا عن المنتجات أو الأسعار أو الشحن.',
     chatOffline: 'تعذّر الوصول إلى خدمة المحادثة الآن — حاول لاحقًا، أو أرسل طلب سعر بدلًا من ذلك.',
     chatTyping: 'الدعم يكتب الآن…'
@@ -634,7 +634,7 @@ const MESSAGES = {
     chatOpen: 'Написать нам', chatTitle: 'Онлайн-поддержка',
     chatNameLabel: 'Подскажите ваше имя, чтобы мы могли обращаться к вам по имени.',
     chatNamePh: 'Ваше имя (необязательно)', chatStart: 'Начать чат', chatSkip: 'Пропустить — сразу к чату',
-    chatInputPh: 'Введите сообщение…', chatSend: 'Отправить', chatAgent: 'Поддержка', chatYou: 'Вы',
+    chatInputPh: 'Введите сообщение…', chatSend: 'Отправить', chatAgent: 'Поддержка', chatYou: 'Вы', chatProductLabel: 'Вы спрашиваете о товаре', chatProductRemove: 'Убрать',
     chatWelcome: 'Здравствуйте! Чем можем помочь? Спрашивайте о товарах, ценах и доставке.',
     chatOffline: 'Чат сейчас недоступен — попробуйте позже или отправьте запрос цены.',
     chatTyping: 'Поддержка печатает…'
@@ -684,7 +684,7 @@ const MESSAGES = {
     chatOpen: 'Mit uns chatten', chatTitle: 'Online-Support',
     chatNameLabel: 'Verraten Sie uns Ihren Namen, damit wir Sie richtig begrüßen können.',
     chatNamePh: 'Ihr Name (optional)', chatStart: 'Chat starten', chatSkip: 'Überspringen — direkt chatten',
-    chatInputPh: 'Nachricht eingeben…', chatSend: 'Senden', chatAgent: 'Support', chatYou: 'Sie',
+    chatInputPh: 'Nachricht eingeben…', chatSend: 'Senden', chatAgent: 'Support', chatYou: 'Sie', chatProductLabel: 'Sie fragen zu', chatProductRemove: 'Entfernen',
     chatWelcome: 'Hallo! Wie können wir helfen? Fragen Sie uns zu Produkten, Preisen oder Versand.',
     chatOffline: 'Der Chat ist gerade nicht erreichbar — bitte später erneut versuchen oder eine Anfrage senden.',
     chatTyping: 'Support tippt…'

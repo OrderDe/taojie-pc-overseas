@@ -199,10 +199,16 @@ async function chatFetch(path, opts = {}) {
 // Create a chat session, or reuse the existing one when `token` is known.
 // The widget also reports where the visitor came from and which page they
 // are on, so the admin console can show a small visitor profile.
-export async function chatStart({ name = '', token = '', referrer = '', page = '', pageTitle = '' } = {}) {
+// Product attachment: pass `product` (snapshot object) to set/replace the
+// product the visitor is asking about, or `clearProduct: true` to remove
+// it; omit both and the stored snapshot is left untouched.
+export async function chatStart({ name = '', token = '', referrer = '', page = '', pageTitle = '', product, clearProduct = false } = {}) {
+  const payload = { name, token, lang: locale.value, referrer, page, pageTitle }
+  if (product !== undefined && product !== null) payload.product = product
+  if (clearProduct) payload.clearProduct = true
   return chatFetch('chat/start', {
     method: 'POST',
-    body: JSON.stringify({ name, token, lang: locale.value, referrer, page, pageTitle })
+    body: JSON.stringify(payload)
   })
 }
 

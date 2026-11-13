@@ -11,6 +11,7 @@ import { siteConfig } from './siteConfig.js'
 import { LANGS, locale, setLocale, t, tx, themeText } from './i18n.js'
 import { CURRENCIES, displayCode, baseCode, isConverted, formatPrice, initFx, setDisplay, currencyForLocale } from './utils/currency.js'
 import { startTracking, trackView, trackClick } from './utils/track.js'
+import { buildChatProduct, saveChatProduct } from './utils/chatProduct.js'
 
 const THEMES = {
   a: { label: 'A · Classic Mall' },
@@ -569,6 +570,17 @@ function requestQuote(p) {
   view.value = 'home'
   setTimeout(() => document.getElementById('rfq')?.scrollIntoView({ behavior: 'smooth' }), 60)
 }
+// 询价 on a product (card / detail page): open the online chat with the
+// product attached, instead of scrolling to the RFQ form. The ChatWidget
+// owns the attachment state; it also persists locally so the widget
+// still shows the product card when it mounts after this event.
+function requestQuoteChat(p) {
+  const snapshot = buildChatProduct(p)
+  if (!snapshot) return
+  trackClick('询价打开聊天')
+  saveChatProduct(snapshot)
+  window.dispatchEvent(new CustomEvent('tj-open-chat', { detail: { product: snapshot } }))
+}
 
 async function refreshCatalogue() {
   const lang = locale.value
@@ -743,7 +755,7 @@ onMounted(async () => {
         <div v-if="!loading && !products.length" class="empty">{{ t('empty') }}</div>
         <div class="grid">
           <ProductCard v-for="p in products" :key="p.id" :product="p" :theme="theme"
-            @open="openProduct" @add="addToCart" @quote="requestQuote" />
+            @open="openProduct" @add="addToCart" @quote="requestQuoteChat" />
         </div>
       </section>
 
@@ -789,7 +801,7 @@ onMounted(async () => {
 
           <div class="detail-actions" :class="{ 'actions-solo': !siteConfig.showCart }">
             <button v-if="siteConfig.showCart && !selected.negotiable" class="btn btn-primary" @click="addToCart(selected)">{{ t('addToCart') }}</button>
-            <button class="btn btn-ghost" @click="requestQuote(selected)">{{ t('requestQuote') }}</button>
+            <button class="btn btn-ghost" @click="requestQuoteChat(selected)">{{ t('requestQuote') }}</button>
           </div>
           <p class="trust" v-if="theme === 'b'">{{ t('trustText') }}</p>
         </div>
@@ -894,7 +906,7 @@ onMounted(async () => {
           <h2 class="profile-block-title">{{ t('ourProducts') }}</h2>
           <div class="grid">
             <ProductCard v-for="p in featuredProducts" :key="p.id" :product="p" :theme="theme"
-              @open="openProduct" @add="addToCart" @quote="requestQuote" />
+              @open="openProduct" @add="addToCart" @quote="requestQuoteChat" />
           </div>
         </section>
         <section v-if="aboutSection" class="profile-block profile-about" :class="{ 'no-img': !sectionImage(aboutSection) }">
