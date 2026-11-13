@@ -79,9 +79,12 @@ const meta = computed(() => THEMES[theme.value])
 const heroTitle = computed(() => siteConfig.heroTitle || themeText(theme.value).headline)
 const heroSub = computed(() => siteConfig.heroSubtitle || themeText(theme.value).sub)
 // Hero side column: theme G shows the compact RFQ panel there; every theme
-// otherwise shows the dealer card. The column exists only when one of the
-// two is enabled, so hiding the dealer card leaves no empty grid track.
-const heroSideVisible = computed(() => (theme.value === 'g' && siteConfig.showRfq) || siteConfig.showDealer)
+// otherwise shows the contact card (showContact, default on — contact
+// details only, no dealer wording), falling back to the dealer card only
+// when the contact card is off and the dealer card is on. The column
+// exists only when one of them is enabled, so hiding them all leaves
+// no empty grid track.
+const heroSideVisible = computed(() => (theme.value === 'g' && siteConfig.showRfq) || siteConfig.showContact || siteConfig.showDealer)
 // Top navigation: admin-configured navItems win; empty = i18n defaults
 // (label-only items with no click action).
 const zones = computed(() => {
@@ -267,6 +270,14 @@ onMounted(async () => {
 
           <aside v-if="heroSideVisible" class="hero-side">
             <RfqPanel v-if="theme === 'g' && siteConfig.showRfq" :product-name="rfqProduct" compact />
+            <div v-else-if="siteConfig.showContact" id="dealer" class="promo">
+              <h3>{{ t('contact') }}</h3>
+              <p>{{ t('contactText') }}</p>
+              <p v-if="siteConfig.hotline" class="promo-tel">{{ t('exportHotline') }}<br /><b>{{ siteConfig.hotline }}</b></p>
+              <p v-if="siteConfig.whatsapp" class="promo-tel">{{ t('whatsappLabel') }}<br /><b>{{ siteConfig.whatsapp }}</b></p>
+              <p v-if="siteConfig.email" class="promo-tel">{{ t('emailLabel') }}<br /><b>{{ siteConfig.email }}</b></p>
+              <button class="btn btn-light" @click="requestQuote(null)">{{ t('talkToSales') }}</button>
+            </div>
             <div v-else-if="siteConfig.showDealer" id="dealer" class="promo">
               <h3>{{ siteConfig.dealerTitle || t('distributorTitle') }}</h3>
               <p>{{ siteConfig.dealerText || t('distributorText') }}</p>
