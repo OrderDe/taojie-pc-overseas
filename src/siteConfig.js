@@ -49,7 +49,11 @@ export const siteConfig = reactive({
   footerBlurb: {},
   footerNote: {},
   footerCopyright: {},
-  footerColumns: []
+  footerColumns: [],
+  // Header search-box placeholder copy ({lang: text} map, admin-edited
+  // on the site-config page). Empty per language = the built-in i18n
+  // searchPh copy for that language.
+  searchPlaceholder: {}
 })
 
 function mergeConfig(data) {
@@ -109,7 +113,7 @@ function mergeConfig(data) {
     // Footer text maps are objects: any object the backend sends wins
     // (an emptied map renders the built-in copy via the tx fallback);
     // a missing/non-object value keeps the default.
-    if (k === 'footerBlurb' || k === 'footerNote' || k === 'footerCopyright') {
+    if (k === 'footerBlurb' || k === 'footerNote' || k === 'footerCopyright' || k === 'searchPlaceholder') {
       if (data[k] && typeof data[k] === 'object' && !Array.isArray(data[k])) siteConfig[k] = data[k]
       continue
     }

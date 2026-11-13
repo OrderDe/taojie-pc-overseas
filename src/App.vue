@@ -166,6 +166,12 @@ async function onNav(item) {
   }
 }
 
+// Header search-box placeholder: the admin-configured {lang: text} map
+// wins (tx fallback chain: current language, then English, then the
+// first filled language); unset languages fall back to the built-in
+// i18n copy, so an untouched config behaves exactly as before.
+const searchPlaceholder = computed(() => tx(siteConfig.searchPlaceholder) || t('searchPh'))
+
 // ---- Footer (admin-configured; built-in copy as fallback) ----
 // Blurb / note / copyright and the link columns come from the site
 // config's footer fields; anything unset falls back to the copy that
@@ -751,7 +757,7 @@ onMounted(async () => {
       <div class="wrap header-in">
         <a class="logo" href="#" @click.prevent="view = 'home'"><img v-if="siteConfig.logo" class="logo-img" :src="siteConfig.logo" alt="TAOJIE" /><template v-else>TAOJIE<span class="logo-dot">.</span></template></a>
         <form class="search" @submit.prevent="onSearch">
-          <input v-model="query" :placeholder="t('searchPh')" />
+          <input v-model="query" :placeholder="searchPlaceholder" />
           <button type="submit">{{ t('search') }}</button>
         </form>
         <button v-if="siteConfig.showCart" class="cart-btn" @click="cartOpen = true">{{ t('cart') }} <b>{{ cartCount }}</b></button>
