@@ -27,7 +27,15 @@ export const siteConfig = reactive({
   dealerButton: '', // dealer card button label
   hotline: '', // export hotline phone shown on the dealer card
   storyTitle: '', // brand story title (theme F section)
-  storyText: '' // brand story body text
+  storyText: '', // brand story body text
+  // "Start Chat with" floating panel (SocialWidget): full profile URLs;
+  // empty = that icon is hidden. wechat is an account ID (tap copies it).
+  // whatsapp / email / hotline above are reused as panel icons too.
+  tiktok: '', // TikTok profile URL
+  instagram: '', // Instagram profile URL
+  facebook: '', // Facebook page URL
+  youtube: '', // YouTube channel URL
+  wechat: '' // WeChat account ID
 })
 
 function mergeConfig(data) {

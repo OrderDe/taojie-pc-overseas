@@ -8,6 +8,7 @@ import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { chatStart, chatSend, chatPull, chatPing, chatTyping } from '../api.js'
 import { EMOJIS, isEmojiOnlyMessage } from '../emojis.js'
 import { t } from '../i18n.js'
+import { trackClick } from '../utils/track.js'
 
 const LS_TOKEN = 'taojie-chat-token'
 const LS_NAME = 'taojie-chat-name'
@@ -126,12 +127,17 @@ function onDraftInput() {
 function toggle() {
   open.value = !open.value
   if (open.value) {
+    trackClick('打开聊天')
     unread.value = 0
     if (token.value) { pull(); heartbeat() }
     else if (visitorName.value || nameInput.value) startChat()
     scrollToBottom()
   }
 }
+
+// Other UI (e.g. the top-bar "Help" link) opens the chat panel through
+// this window event, so the panel state stays owned by this component.
+function openFromOutside() { if (!open.value) toggle() }
 
 onMounted(() => {
   token.value = lsGet(LS_TOKEN)
@@ -141,10 +147,12 @@ onMounted(() => {
   timer = setInterval(() => { if (token.value) pull() }, 3000)
   // Heartbeat only while the chat panel is open (20s cadence).
   pingTimer = setInterval(() => { if (open.value) heartbeat() }, 20000)
+  window.addEventListener('tj-open-chat', openFromOutside)
 })
 onBeforeUnmount(() => {
   if (timer) clearInterval(timer)
   if (pingTimer) clearInterval(pingTimer)
+  window.removeEventListener('tj-open-chat', openFromOutside)
 })
 </script>
 

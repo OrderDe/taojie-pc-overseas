@@ -4,10 +4,12 @@ import ProductCard from './components/ProductCard.vue'
 import CartDrawer from './components/CartDrawer.vue'
 import RfqPanel from './components/RfqPanel.vue'
 import ChatWidget from './components/ChatWidget.vue'
+import SocialWidget from './components/SocialWidget.vue'
 import { fetchCategories, fetchKeywords, fetchProducts, fetchProductDetail, fetchBrands, demoBrands } from './api.js'
 import { siteConfig } from './siteConfig.js'
 import { LANGS, locale, setLocale, t, tx, themeText } from './i18n.js'
 import { CURRENCIES, displayCode, baseCode, isConverted, formatPrice, initFx, setDisplay, currencyForLocale } from './utils/currency.js'
+import { startTracking, trackView, trackClick } from './utils/track.js'
 
 const THEMES = {
   a: { label: 'A · Classic Mall' },
@@ -61,6 +63,9 @@ const cart = ref([])
 const cartOpen = ref(false)
 const rfqProduct = ref('')
 const toast = ref('')
+// Label of the page the visitor is currently on, for the statistics
+// beacon: heartbeats report it, trackView updates it at each stop.
+const currentPageLabel = ref('home')
 
 // A configured logo doubles as the browser tab favicon; an empty logo
 // leaves the built-in favicon untouched.
@@ -130,6 +135,7 @@ function scrollToAnchor(id) {
   setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }), 60)
 }
 async function onNav(item) {
+  trackClick(`导航:${item.label}`)
   const type = navType(item)
   if (type === 'category') {
     await pickCategory(String(item.categoryId || ''))
@@ -183,24 +189,39 @@ async function loadBrands() {
   if (!items.some((b) => String(b.id) === activeBrand.value)) activeBrand.value = ''
 }
 
-async function onSearch() { view.value = 'home'; searchedQuery.value = query.value.trim(); activeBrand.value = ''; await loadProducts() }
+async function onSearch() {
+  const q = query.value.trim()
+  if (q) trackClick(`搜索:${q}`)
+  view.value = 'home'; searchedQuery.value = q; activeBrand.value = ''; await loadProducts()
+  currentPageLabel.value = 'catalogue'; trackView('catalogue')
+}
 async function pickCategory(id) {
+  const cat = categories.value.find((c) => String(c.id) === id)
+  trackClick(`分类:${id ? (cat ? leafName(tx(cat.name)) : id) : '全部'}`)
   activeCategory.value = id
   query.value = ''
   searchedQuery.value = ''
   activeBrand.value = ''
   view.value = 'home'
   await Promise.all([loadProducts(), loadBrands()])
+  currentPageLabel.value = 'catalogue'; trackView('catalogue')
 }
 // Brand chip toggle: clicking the selected brand (or the "all" chip) clears it.
-async function pickBrand(id) { activeBrand.value = activeBrand.value === id ? '' : id; await loadProducts() }
+async function pickBrand(id) {
+  const brand = brands.value.find((b) => String(b.id) === id)
+  trackClick(`品牌:${brand ? brand.name : '全部'}`)
+  activeBrand.value = activeBrand.value === id ? '' : id; await loadProducts()
+}
 
 async function openProduct(p) {
+  const name = tx(p.name)
+  trackClick(`点商品:${name}`)
   const { item, demo } = await fetchProductDetail(p.id)
   if (!item) { showToast('商品详情加载失败，请稍后重试'); return }
   selected.value = { ...p, ...item, specs: { ...(p.specs || {}), ...(item.specs || {}) } }
   noteDemo(demo)
   view.value = 'detail'
+  currentPageLabel.value = `detail:${name}`; trackView(currentPageLabel.value)
   window.scrollTo({ top: 0 })
 }
 
@@ -211,7 +232,10 @@ function addToCart(p) {
   showToast(t('added', { name: tx(p.name) }))
 }
 function removeFromCart(id) { cart.value = cart.value.filter((i) => String(i.id) !== String(id)) }
+// Top-bar Help opens the online chat panel (ChatWidget listens for this).
+function openHelpChat() { window.dispatchEvent(new Event('tj-open-chat')) }
 function requestQuote(p) {
+  trackClick('点联系销售/询价')
   rfqProduct.value = p ? tx(p.name) : ''
   view.value = 'home'
   setTimeout(() => document.getElementById('rfq')?.scrollIntoView({ behavior: 'smooth' }), 60)
@@ -235,6 +259,11 @@ async function refreshCatalogue() {
 }
 watch(locale, refreshCatalogue)
 onMounted(async () => {
+  // Visitor statistics: report this landing and start the heartbeat.
+  // The beacon is fire-and-forget, so it runs in demo mode too.
+  currentPageLabel.value = 'home'
+  startTracking(() => currentPageLabel.value)
+  trackView('home')
   await refreshCatalogue()
   if (!demoMode.value) initFx(siteConfig.baseCurrency, locale.value)
 })
@@ -247,9 +276,8 @@ onMounted(async () => {
       <div class="wrap topbar-in">
         <span class="topbar-left">{{ siteConfig.announcement || t('announcement') }}</span>
         <span class="topbar-right">
-          <a href="#" @click.prevent>{{ t('signIn') }}</a>
           <a v-if="siteConfig.showCart" href="#" @click.prevent>{{ t('orders') }}</a>
-          <a href="#" @click.prevent>{{ t('help') }}</a>
+          <a href="#" @click.prevent="openHelpChat">{{ t('help') }}</a>
           <span class="lang-menu">
             <button type="button" class="lang-btn" aria-haspopup="listbox" :aria-expanded="langOpen" @click="langOpen = !langOpen; curOpen = false">
               {{ currentLang.label }}<span class="lang-caret">▾</span>
@@ -288,9 +316,6 @@ onMounted(async () => {
           <button type="submit">{{ t('search') }}</button>
         </form>
         <button v-if="siteConfig.showCart" class="cart-btn" @click="cartOpen = true">{{ t('cart') }} <b>{{ cartCount }}</b></button>
-      </div>
-      <div class="wrap hotwords" v-if="keywords.length">
-        <button v-for="k in keywords" :key="k" @click="query = k; onSearch()">{{ k }}</button>
       </div>
     </header>
 
@@ -436,6 +461,7 @@ onMounted(async () => {
     </footer>
 
     <CartDrawer :open="cartOpen" :items="cart" @close="cartOpen = false" @remove="removeFromCart" @clear="cart = []" />
+    <SocialWidget />
     <ChatWidget />
     <div v-if="toast" class="toast">{{ toast }}</div>
   </div>
