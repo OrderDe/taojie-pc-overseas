@@ -234,6 +234,8 @@ body { background: #f3f3f5; }
 .formula-lab { color: var(--muted); font-size: 14px; margin: 4px 0 10px; }
 .formula-grams { display: inline-flex; gap: 10px; align-items: center; margin-bottom: 10px; font-size: 14px; color: var(--muted); }
 .formula-grams input { width: 130px; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--ink); font: inherit; }
+.profile-embed-page { padding: 0 4px; }
+.profile-embed { display: block; width: 100%; height: calc(100vh - 158px); min-height: 560px; border: 0; background: #fff; }
 .profile-head { margin-bottom: 6px; }
 .profile-logo { max-height: 56px; width: auto; }
 .profile-story { font-size: 16.5px; line-height: 1.75; max-width: 860px; white-space: pre-wrap; }

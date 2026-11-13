@@ -581,7 +581,14 @@ onMounted(async () => {
       </template>
     </main>
 
-    <!-- Company profile view -->
+    <!-- Company profile view: full-page embed when an embed URL is
+         configured (mirrors the original site, whose profile page is a
+         borderless iframe of the company homepage). -->
+    <main v-else-if="view === 'profile' && siteConfig.profileUrl" class="profile-embed-page">
+      <iframe class="profile-embed" :src="siteConfig.profileUrl" :title="t('companyProfile')" frameborder="0"></iframe>
+    </main>
+
+    <!-- Company profile view, text fallback (embed URL cleared in admin) -->
     <main v-else-if="view === 'profile'" class="wrap profile-page">
       <div class="profile-head">
         <img v-if="siteConfig.logo" class="profile-logo" :src="siteConfig.logo" alt="TAOJIE" />
