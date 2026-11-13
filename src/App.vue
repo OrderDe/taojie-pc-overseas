@@ -1,4 +1,5 @@
 <script setup>
+import { navigationItems } from './utils/navigation'
 import { computed, onMounted, ref, watch } from 'vue'
 import ProductCard from './components/ProductCard.vue'
 import CartDrawer from './components/CartDrawer.vue'
@@ -39,15 +40,7 @@ const searchedQuery = ref('')
 const activeCategory = ref('')
 const activeBrand = ref('')
 const selected = ref(null)
-const expandedCategoryIds = computed(() => {
-  const ids = new Set()
-  let id = activeCategory.value
-  while (id && !ids.has(id)) {
-    ids.add(id)
-    id = categories.value.find(c => String(c.id) === id)?.parentId || ''
-  }
-  return ids
-})
+const expandedCategoryIds = ref(new Set())
 const navigationCategories = computed(() => {
   const result = []
   const walk = (parentId) => {
@@ -112,10 +105,7 @@ const heroSub = computed(() => siteConfig.heroSubtitle || themeText(theme.value)
 const heroSideVisible = computed(() => (theme.value === 'g' && siteConfig.showRfq) || siteConfig.showContact || siteConfig.showDealer)
 // Top navigation: admin-configured navItems win; empty = i18n defaults
 // (label-only items with no click action).
-const zones = computed(() => {
-  const items = (siteConfig.navItems || []).filter((i) => i && i.label)
-  return items.length ? items : t('zones').map((label) => ({ label }))
-})
+const zones = computed(() => navigationItems(siteConfig,t))
 
 // Nav click dispatch. Items saved by the current admin carry an explicit
 // type; older items have none, so infer from link — http(s) → external,
@@ -199,7 +189,19 @@ async function onSearch() {
   view.value = 'home'; searchedQuery.value = q; activeBrand.value = ''; await loadProducts()
   currentPageLabel.value = 'catalogue'; trackView('catalogue')
 }
-async function pickCategory(id) {
+async function pickCategory(id, toggleBranch = false) {
+  const expanded = new Set(expandedCategoryIds.value)
+  const wasExpanded = expanded.has(id)
+  const visited = new Set()
+  let ancestorId = id
+  while (ancestorId && !visited.has(ancestorId)) {
+    visited.add(ancestorId)
+    expanded.add(ancestorId)
+    ancestorId = String(categories.value.find(c => String(c.id) === ancestorId)?.parentId || '')
+  }
+  if (!id) expanded.clear()
+  else if (toggleBranch && wasExpanded) expanded.delete(id)
+  expandedCategoryIds.value = expanded
   const cat = categories.value.find((c) => String(c.id) === id)
   trackClick(`分类:${id ? (cat ? leafName(tx(cat.name)) : id) : '全部'}`)
   activeCategory.value = id
@@ -247,17 +249,27 @@ const formulaDetail = ref(null)
 const recipeGrams = ref(1000)
 const formulaPages = computed(() => Math.max(1, Math.ceil(formulaTotal.value / FORMULA_PAGE_SIZE)))
 
+let formulaSearchRequest = 0
+let formulaModelsRequest = 0
+let formulaDetailRequest = 0
 async function loadFormulaModels() {
+  const request = ++formulaModelsRequest
+  const lang = locale.value
+  if (!fBrand.value) { formulaModels.value = []; fModel.value = ''; return }
   const { items } = await fetchFormulaModels(fBrand.value)
+  if (request !== formulaModelsRequest || lang !== locale.value) return
   formulaModels.value = items
   if (!items.some((m) => m.id === fModel.value)) fModel.value = ''
 }
 async function runFormulaSearch(page = 1) {
+  const request = ++formulaSearchRequest
+  const lang = locale.value
   formulaLoading.value = true
   const { items, total } = await fetchFormulaSearch({
     brandId: fBrand.value, modelId: fModel.value, keyword: fKeyword.value.trim(),
     page, pageSize: FORMULA_PAGE_SIZE
   })
+  if (request !== formulaSearchRequest || lang !== locale.value) return
   formulaRows.value = items
   formulaTotal.value = total
   formulaPage.value = page
@@ -277,8 +289,11 @@ async function openFormula() {
   if (!formulaSearched.value) runFormulaSearch(1)
 }
 async function openFormulaDetail(row) {
+  const request = ++formulaDetailRequest
+  const lang = locale.value
   trackClick(`配方:${row.colorNum || row.carColor}`)
   const { item } = await fetchFormulaDetail(row.id)
+  if (request !== formulaDetailRequest || lang !== locale.value) return
   if (!item) { showToast(t('formulaEmpty')); return }
   formulaDetail.value = item
   recipeGrams.value = 1000
@@ -336,7 +351,28 @@ async function refreshCatalogue() {
     if (lang === locale.value && selected.value?.id === id && item) selected.value = item
   }
 }
-watch(locale, refreshCatalogue)
+async function refreshFormulaLanguage() {
+  if (view.value !== 'formula') {
+    formulaBrands.value = []
+    formulaModels.value = []
+    formulaRows.value = []
+    formulaSearched.value = false
+    formulaDetail.value = null
+    return
+  }
+  const lang = locale.value
+  const detailId = formulaDetail.value?.id
+  ++formulaDetailRequest
+  const requests = [runFormulaSearch(formulaPage.value), loadFormulaModels()]
+  requests.push(fetchFormulaBrands().then(({ items }) => {
+    if (lang === locale.value) formulaBrands.value = items
+  }))
+  if (detailId) requests.push(fetchFormulaDetail(detailId).then(({ item }) => {
+    if (lang === locale.value && formulaDetail.value?.id === detailId && item) formulaDetail.value = item
+  }))
+  await Promise.all(requests)
+}
+watch(locale, () => { refreshCatalogue(); refreshFormulaLanguage() })
 onMounted(async () => {
   // Visitor statistics: report this landing and start the heartbeat.
   // The beacon is fire-and-forget, so it runs in demo mode too.
@@ -401,8 +437,6 @@ onMounted(async () => {
     <!-- Zone nav -->
     <nav class="zones"><div class="wrap zones-in">
       <button v-for="(item, idx) in zones" :key="idx" @click="onNav(item)">{{ item.label }}</button>
-      <button @click="openFormula">{{ t('formulaSearch') }}</button>
-      <button @click="openProfile">{{ t('companyProfile') }}</button>
     </div></nav>
 
     <main v-if="view === 'home'">
@@ -414,7 +448,7 @@ onMounted(async () => {
             <button :class="{ active: !activeCategory }" @click="pickCategory('')">{{ t('allProducts') }}</button>
             <button v-for="c in navigationCategories" :key="c.id" :class="{ active: activeCategory === String(c.id) }"
               :style="{ paddingLeft: (12 + (c.level - 1) * 14) + 'px' }" :title="c.pathName"
-              :aria-expanded="c.hasChildren ? expandedCategoryIds.has(String(c.id)) : undefined" @click="pickCategory(String(c.id))">
+              :aria-expanded="c.hasChildren ? expandedCategoryIds.has(String(c.id)) : undefined" @click="pickCategory(String(c.id), true)">
               {{ tx(c.name) }} <span v-if="c.hasChildren">{{ expandedCategoryIds.has(String(c.id)) ? '⌄' : '›' }}</span>
             </button>
           </aside>

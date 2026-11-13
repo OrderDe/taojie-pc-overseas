@@ -20,6 +20,7 @@ export const siteConfig = reactive({
   defaultLanguage: 'en', // one of en/zh/es/fr/pt; a visitor's own choice wins
   // Homepage content blocks (admin-editable). Empty string / empty array
   // means "use the built-in theme/i18n default" on the storefront.
+  navigationConfigured: false,
   navItems: [], // top navigation [{label, link, type?, categoryId?}]; empty = i18n zone labels
   heroEyebrow: '', // overrides the theme label above the headline
   dealerTitle: '', // dealer (distributor) card title
@@ -48,7 +49,7 @@ function mergeConfig(data) {
         siteConfig.navItems = data[k]
           .filter((i) => i && typeof i === 'object')
           .map((i) => {
-            const item = { label: String(i.label || ''), link: String(i.link || '') }
+            const item = { label: String(i.label || ''), link: String(i.link || ''), enabled: i.enabled !== false, labelKey: String(i.labelKey || '') }
             const type = String(i.type || '')
             if (type === 'category' || type === 'anchor' || type === 'external') item.type = type
             if (i.categoryId !== undefined && i.categoryId !== null && String(i.categoryId) !== '') {

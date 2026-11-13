@@ -14,14 +14,14 @@ export const API_BASE = (import.meta.env.VITE_API_BASE || '/api').replace(/\/$/,
 
 const TIMEOUT_MS = 6000
 
-async function getJson(path, params = {}) {
+async function getJson(path, params = {}, timeoutMs = TIMEOUT_MS) {
   const qs = new URLSearchParams()
   Object.entries(params).forEach(([k, v]) => {
     if (v !== undefined && v !== null && v !== '') qs.set(k, v)
   })
   const url = `${API_BASE}/${path}${qs.toString() ? `?${qs}` : ''}`
   const ctrl = new AbortController()
-  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS)
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs)
   try {
     const res = await fetch(url, { signal: ctrl.signal, headers: { Accept: 'application/json' } })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -259,7 +259,7 @@ export function demoBrands() { return [] }
 // formula page shows its empty state rather than invented colours.
 export async function fetchFormulaBrands() {
   try {
-    const data = await getJson('formula/brands')
+    const data = await getJson('formula/brands', { lang: locale.value }, 90000)
     const items = (Array.isArray(data) ? data : [])
       .map((b) => ({ id: String(b.id ?? ''), name: String(b.name ?? '') }))
       .filter((b) => b.id && b.name)
@@ -271,7 +271,7 @@ export async function fetchFormulaBrands() {
 
 export async function fetchFormulaModels(brandId = '') {
   try {
-    const data = await getJson('formula/models', { brandId })
+    const data = await getJson('formula/models', { brandId, lang: locale.value }, 90000)
     const items = (Array.isArray(data) ? data : [])
       .map((m) => ({ id: String(m.id ?? ''), brandId: String(m.brandId ?? ''), model: String(m.model ?? '') }))
       .filter((m) => m.id && m.model)
@@ -283,7 +283,7 @@ export async function fetchFormulaModels(brandId = '') {
 
 export async function fetchFormulaSearch({ brandId = '', modelId = '', keyword = '', page = 1, pageSize = 15 } = {}) {
   try {
-    const data = await getJson('formula/search', { brandId, modelId, keyword, page, pageSize })
+    const data = await getJson('formula/search', { brandId, modelId, keyword, page, pageSize, lang: locale.value }, 90000)
     const items = (data && Array.isArray(data.items) ? data.items : [])
       .map((c) => ({
         id: String(c.id ?? ''), brandId: String(c.brandId ?? ''), brandName: String(c.brandName ?? ''),
@@ -301,7 +301,7 @@ export async function fetchFormulaSearch({ brandId = '', modelId = '', keyword =
 
 export async function fetchFormulaDetail(id) {
   try {
-    const data = await getJson(`formula/colors/${encodeURIComponent(id)}`)
+    const data = await getJson(`formula/colors/${encodeURIComponent(id)}`, { lang: locale.value }, 90000)
     if (!data || !data.id) return { item: null, error: true }
     return { item: data, error: false }
   } catch {
