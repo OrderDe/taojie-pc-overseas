@@ -68,6 +68,7 @@ export function normalizeProduct(raw, idx = 0) {
     category: String(pick(raw, ['cateName', 'categoryName', 'category'], 'Products')),
     brandId: String(pick(raw, ['brandId', 'brand_id'], '')),
     brand: String(pick(raw, ['brand', 'brandName'], '')),
+    negotiable: [true, 1, '1', 'true'].includes(raw.negotiable),
     price: Number(pick(raw, ['price', 'vipPrice'], 0)) || 0,
     otPrice: Number(pick(raw, ['otPrice', 'marketPrice', 'originalPrice'], 0)) || 0,
     sales: Number(pick(raw, ['sales', 'ficti', 'sold'], 0)) || 0,
