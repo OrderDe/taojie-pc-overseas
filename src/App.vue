@@ -5,7 +5,7 @@ import CartDrawer from './components/CartDrawer.vue'
 import RfqPanel from './components/RfqPanel.vue'
 import ChatWidget from './components/ChatWidget.vue'
 import SocialWidget from './components/SocialWidget.vue'
-import { fetchCategories, fetchKeywords, fetchProducts, fetchProductDetail, fetchBrands, demoBrands } from './api.js'
+import { fetchCategories, fetchKeywords, fetchProducts, fetchProductDetail, fetchBrands, demoBrands, fetchFormulaBrands, fetchFormulaModels, fetchFormulaSearch, fetchFormulaDetail } from './api.js'
 import { siteConfig } from './siteConfig.js'
 import { LANGS, locale, setLocale, t, tx, themeText } from './i18n.js'
 import { CURRENCIES, displayCode, baseCode, isConverted, formatPrice, initFx, setDisplay, currencyForLocale } from './utils/currency.js'
@@ -27,7 +27,7 @@ const theme = computed(() => {
   return THEMES[key] ? key : 'h'
 })
 
-const view = ref('home') // 'home' | 'detail'
+const view = ref('home') // 'home' | 'detail' | 'formula' | 'profile'
 const categories = ref([])
 const products = ref([])
 const keywords = ref([])
@@ -141,6 +141,10 @@ async function onNav(item) {
     await pickCategory(String(item.categoryId || ''))
     scrollToAnchor('catalogue')
   } else if (type === 'anchor') {
+    // The formula library and company profile are app views, reachable
+    // from admin-configured nav items via the #formula / #profile links.
+    if (item.link === '#formula') { openFormula(); return }
+    if (item.link === '#profile') { openProfile(); return }
     const id = String(item.link || '').replace(/^#/, '')
     if (!id) return
     view.value = 'home'
@@ -223,6 +227,81 @@ async function openProduct(p) {
   view.value = 'detail'
   currentPageLabel.value = `detail:${name}`; trackView(currentPageLabel.value)
   window.scrollTo({ top: 0 })
+}
+
+// ---- Paint formula library + company profile ----
+// Data comes only from /api/formula/*; with the backend down the page
+// shows its empty state (no demo colours are invented).
+const formulaBrands = ref([])
+const formulaModels = ref([])
+const fBrand = ref('')
+const fModel = ref('')
+const fKeyword = ref('')
+const formulaRows = ref([])
+const formulaTotal = ref(0)
+const formulaPage = ref(1)
+const FORMULA_PAGE_SIZE = 15
+const formulaLoading = ref(false)
+const formulaSearched = ref(false)
+const formulaDetail = ref(null)
+const recipeGrams = ref(1000)
+const formulaPages = computed(() => Math.max(1, Math.ceil(formulaTotal.value / FORMULA_PAGE_SIZE)))
+
+async function loadFormulaModels() {
+  const { items } = await fetchFormulaModels(fBrand.value)
+  formulaModels.value = items
+  if (!items.some((m) => m.id === fModel.value)) fModel.value = ''
+}
+async function runFormulaSearch(page = 1) {
+  formulaLoading.value = true
+  const { items, total } = await fetchFormulaSearch({
+    brandId: fBrand.value, modelId: fModel.value, keyword: fKeyword.value.trim(),
+    page, pageSize: FORMULA_PAGE_SIZE
+  })
+  formulaRows.value = items
+  formulaTotal.value = total
+  formulaPage.value = page
+  formulaSearched.value = true
+  formulaLoading.value = false
+}
+async function onFormulaBrandChange() { fModel.value = ''; await loadFormulaModels() }
+async function openFormula() {
+  view.value = 'formula'
+  formulaDetail.value = null
+  currentPageLabel.value = 'formula'; trackView('formula')
+  window.scrollTo({ top: 0 })
+  if (!formulaBrands.value.length) {
+    const [{ items }] = await Promise.all([fetchFormulaBrands(), loadFormulaModels()])
+    formulaBrands.value = items
+  }
+  if (!formulaSearched.value) runFormulaSearch(1)
+}
+async function openFormulaDetail(row) {
+  trackClick(`配方:${row.colorNum || row.carColor}`)
+  const { item } = await fetchFormulaDetail(row.id)
+  if (!item) { showToast(t('formulaEmpty')); return }
+  formulaDetail.value = item
+  recipeGrams.value = 1000
+  currentPageLabel.value = `formula:${item.colorNum || item.carColor}`; trackView(currentPageLabel.value)
+  window.scrollTo({ top: 0 })
+}
+function openProfile() {
+  view.value = 'profile'
+  currentPageLabel.value = 'profile'; trackView('profile')
+  window.scrollTo({ top: 0 })
+}
+// Recipe math for one colour number: share = dose / total dose of its
+// lines; grams and running cumulative follow the visitor's total grams.
+function recipeRows(lines) {
+  const list = lines || []
+  const total = list.reduce((s, l) => s + (Number(l.dose) || 0), 0)
+  let acc = 0
+  return list.map((l) => {
+    const dose = Number(l.dose) || 0
+    const grams = total > 0 ? (Number(recipeGrams.value) || 0) * dose / total : 0
+    acc += grams
+    return { ...l, share: total > 0 ? dose / total * 100 : 0, grams, cumulative: acc }
+  })
 }
 
 function addToCart(p) {
@@ -322,6 +401,8 @@ onMounted(async () => {
     <!-- Zone nav -->
     <nav class="zones"><div class="wrap zones-in">
       <button v-for="(item, idx) in zones" :key="idx" @click="onNav(item)">{{ item.label }}</button>
+      <button @click="openFormula">{{ t('formulaSearch') }}</button>
+      <button @click="openProfile">{{ t('companyProfile') }}</button>
     </div></nav>
 
     <main v-if="view === 'home'">
@@ -433,6 +514,94 @@ onMounted(async () => {
           <p class="trust" v-if="theme === 'b'">{{ t('trustText') }}</p>
         </div>
       </div>
+    </main>
+
+    <!-- Formula search view -->
+    <main v-else-if="view === 'formula'" class="wrap formula-page">
+      <template v-if="!formulaDetail">
+        <h1 class="page-title">{{ t('formulaSearch') }}</h1>
+        <form class="formula-bar" @submit.prevent="runFormulaSearch(1)">
+          <label>{{ t('formulaBrand') }}
+            <select v-model="fBrand" @change="onFormulaBrandChange">
+              <option value="">{{ t('formulaAllBrands') }}</option>
+              <option v-for="b in formulaBrands" :key="b.id" :value="b.id">{{ b.name }}</option>
+            </select>
+          </label>
+          <label>{{ t('formulaModel') }}
+            <select v-model="fModel">
+              <option value="">{{ t('formulaAllModels') }}</option>
+              <option v-for="m in formulaModels" :key="m.id" :value="m.id">{{ m.model }}</option>
+            </select>
+          </label>
+          <input v-model="fKeyword" class="formula-kw" :placeholder="t('formulaKeywordPh')" />
+          <button type="submit" class="btn btn-primary">{{ t('search') }}</button>
+        </form>
+        <p class="formula-count"><span v-if="formulaLoading">{{ t('loading') }}</span><span v-else>{{ t('formulaCount', { n: formulaTotal }) }}</span></p>
+        <div v-if="!formulaLoading && formulaSearched && !formulaRows.length" class="empty">{{ t('formulaEmpty') }}</div>
+        <table v-if="formulaRows.length" class="formula-table">
+          <thead><tr><th></th><th>{{ t('colBrand') }}</th><th>{{ t('colModel') }}</th><th>{{ t('colColor') }}</th><th>{{ t('colCode') }}</th><th>{{ t('colUpdated') }}</th></tr></thead>
+          <tbody>
+            <tr v-for="row in formulaRows" :key="row.id" @click="openFormulaDetail(row)">
+              <td><img v-if="row.carImage" class="formula-thumb" :src="row.carImage" alt="" @error="$event.target.remove()" /></td>
+              <td>{{ row.brandName }}</td><td>{{ row.modelName }}</td><td>{{ row.carColor }}</td><td>{{ row.colorNum }}</td><td>{{ row.updateTime }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="formulaPages > 1" class="formula-pager">
+          <button class="btn btn-ghost btn-sm" :disabled="formulaPage <= 1" @click="runFormulaSearch(formulaPage - 1)">‹</button>
+          <span>{{ formulaPage }} / {{ formulaPages }}</span>
+          <button class="btn btn-ghost btn-sm" :disabled="formulaPage >= formulaPages" @click="runFormulaSearch(formulaPage + 1)">›</button>
+        </div>
+      </template>
+      <template v-else>
+        <button class="btn btn-ghost btn-sm" @click="formulaDetail = null">{{ t('back') }}</button>
+        <h1 class="page-title">{{ formulaDetail.carColor }}</h1>
+        <p class="formula-meta">{{ formulaDetail.brandName }} · {{ formulaDetail.modelName }} · {{ t('colCode') }}: {{ formulaDetail.colorNum }}<span v-if="formulaDetail.cardNum"> · {{ formulaDetail.cardNum }}</span></p>
+        <img v-if="formulaDetail.carImage" class="formula-photo" :src="formulaDetail.carImage" alt="" @error="$event.target.remove()" />
+        <div v-if="!formulaDetail.numbers.length" class="empty">{{ t('noFormula') }}</div>
+        <section v-for="num in formulaDetail.numbers" :key="num.id" class="formula-num">
+          <h3>{{ t('recipeTitle') }} · {{ num.name }} <small>{{ num.colorName }}</small></h3>
+          <p v-if="num.labL !== null && num.labL !== undefined" class="formula-lab">{{ t('labLabel') }}: L {{ num.labL }} · a {{ num.labA }} · b {{ num.labB }}</p>
+          <p v-if="!num.formula.length" class="formula-lab">{{ t('noFormula') }}</p>
+          <template v-else>
+            <label class="formula-grams">{{ t('gramsLabel') }} <input v-model.number="recipeGrams" type="number" min="0" step="any" /></label>
+            <table class="formula-table">
+              <thead><tr><th>{{ t('colToner') }}</th><th>{{ t('colShare') }}</th><th>{{ t('colGrams') }}</th><th>{{ t('colCumulative') }}</th></tr></thead>
+              <tbody>
+                <tr v-for="line in recipeRows(num.formula)" :key="line.id">
+                  <td>{{ line.name || line.model }}<small v-if="line.name && line.model"> · {{ line.model }}</small></td>
+                  <td>{{ line.share.toFixed(1) }}%</td>
+                  <td>{{ line.grams.toFixed(1) }}</td>
+                  <td>{{ line.cumulative.toFixed(1) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </template>
+        </section>
+      </template>
+    </main>
+
+    <!-- Company profile view -->
+    <main v-else-if="view === 'profile'" class="wrap profile-page">
+      <div class="profile-head">
+        <img v-if="siteConfig.logo" class="profile-logo" :src="siteConfig.logo" alt="TAOJIE" />
+        <span v-else class="logo">TAOJIE<span class="logo-dot">.</span></span>
+      </div>
+      <h1 class="page-title">{{ siteConfig.storyTitle || t('storyTitle') }}</h1>
+      <p class="profile-story">{{ siteConfig.storyText || t('storyText') }}</p>
+      <div v-if="siteConfig.hotline || siteConfig.whatsapp || siteConfig.email" class="profile-contact">
+        <p v-if="siteConfig.hotline">{{ t('exportHotline') }}: <b>{{ siteConfig.hotline }}</b></p>
+        <p v-if="siteConfig.whatsapp">{{ t('whatsappLabel') }}: <b>{{ siteConfig.whatsapp }}</b></p>
+        <p v-if="siteConfig.email">{{ t('emailLabel') }}: <b>{{ siteConfig.email }}</b></p>
+      </div>
+      <div v-if="siteConfig.tiktok || siteConfig.instagram || siteConfig.facebook || siteConfig.youtube || siteConfig.wechat" class="profile-social">
+        <a v-if="siteConfig.tiktok" :href="siteConfig.tiktok" target="_blank" rel="noopener">TikTok</a>
+        <a v-if="siteConfig.instagram" :href="siteConfig.instagram" target="_blank" rel="noopener">Instagram</a>
+        <a v-if="siteConfig.facebook" :href="siteConfig.facebook" target="_blank" rel="noopener">Facebook</a>
+        <a v-if="siteConfig.youtube" :href="siteConfig.youtube" target="_blank" rel="noopener">YouTube</a>
+        <span v-if="siteConfig.wechat">WeChat: <b>{{ siteConfig.wechat }}</b></span>
+      </div>
+      <button class="btn btn-primary" @click="requestQuote(null)">{{ t('talkToSales') }}</button>
     </main>
 
     <footer class="footer">

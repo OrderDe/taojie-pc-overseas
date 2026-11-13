@@ -253,3 +253,58 @@ export async function fetchBrands({ categoryId = '' } = {}) {
 }
 
 export function demoBrands() { return [] }
+
+// ---- Paint formula library (/api/formula/*) ----
+// No demo fallback here by design: when the backend is unreachable the
+// formula page shows its empty state rather than invented colours.
+export async function fetchFormulaBrands() {
+  try {
+    const data = await getJson('formula/brands')
+    const items = (Array.isArray(data) ? data : [])
+      .map((b) => ({ id: String(b.id ?? ''), name: String(b.name ?? '') }))
+      .filter((b) => b.id && b.name)
+    return { items, error: false }
+  } catch {
+    return { items: [], error: true }
+  }
+}
+
+export async function fetchFormulaModels(brandId = '') {
+  try {
+    const data = await getJson('formula/models', { brandId })
+    const items = (Array.isArray(data) ? data : [])
+      .map((m) => ({ id: String(m.id ?? ''), brandId: String(m.brandId ?? ''), model: String(m.model ?? '') }))
+      .filter((m) => m.id && m.model)
+    return { items, error: false }
+  } catch {
+    return { items: [], error: true }
+  }
+}
+
+export async function fetchFormulaSearch({ brandId = '', modelId = '', keyword = '', page = 1, pageSize = 15 } = {}) {
+  try {
+    const data = await getJson('formula/search', { brandId, modelId, keyword, page, pageSize })
+    const items = (data && Array.isArray(data.items) ? data.items : [])
+      .map((c) => ({
+        id: String(c.id ?? ''), brandId: String(c.brandId ?? ''), brandName: String(c.brandName ?? ''),
+        modelId: String(c.modelId ?? ''), modelName: String(c.modelName ?? ''),
+        carColor: String(c.carColor ?? ''), factoryColor: String(c.factoryColor ?? ''),
+        colorNum: String(c.colorNum ?? ''), cardNum: String(c.cardNum ?? ''),
+        carImage: String(c.carImage ?? ''), updateTime: String(c.updateTime ?? '')
+      }))
+      .filter((c) => c.id)
+    return { items, total: Number(data?.total || 0), page: Number(data?.page || page), pageSize: Number(data?.pageSize || pageSize), error: false }
+  } catch {
+    return { items: [], total: 0, page, pageSize, error: true }
+  }
+}
+
+export async function fetchFormulaDetail(id) {
+  try {
+    const data = await getJson(`formula/colors/${encodeURIComponent(id)}`)
+    if (!data || !data.id) return { item: null, error: true }
+    return { item: data, error: false }
+  } catch {
+    return { item: null, error: true }
+  }
+}
