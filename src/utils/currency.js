@@ -42,6 +42,31 @@ export const CURRENCIES = [
 ]
 const META = Object.fromEntries(CURRENCIES.map((c) => [c.code, c]))
 
+// Soft language → currency link (storefront top bar): picking a UI
+// language also switches the display currency to that language's
+// default below. It is deliberately one-way and overridable — the
+// visitor can still pick any other currency afterwards (e.g. English
+// UI with ZAR for South Africa), and that manual pick is not bounced
+// back until they change the language again. Both top-bar pills stay
+// visible and independently clickable.
+export const LANG_CURRENCY = {
+  zh: 'CNY',
+  en: 'USD',
+  es: 'EUR',
+  fr: 'EUR',
+  pt: 'BRL',
+  id: 'IDR',
+  ms: 'MYR',
+  vi: 'VND',
+  th: 'THB',
+  ar: 'AED',
+  ru: 'RUB',
+  de: 'EUR'
+}
+export function currencyForLocale(code) {
+  return LANG_CURRENCY[String(code || '')] || null
+}
+
 // Same API base expression as siteConfig.js (optional-chained
 // import.meta.env keeps this module importable outside Vite too).
 const API_BASE = (import.meta.env?.VITE_API_BASE || '/api').replace(/\/$/, '')
@@ -67,12 +92,13 @@ export function setDisplay(code) {
 }
 
 // Load the rate table for the site's base currency. First-visit display
-// default: Chinese UI → CNY, anything else → USD; a saved choice wins.
+// default follows the same language → currency link as the top bar
+// (Chinese UI → CNY, German UI → EUR, …); a saved choice wins.
 // Failures are silent by design (see header comment).
 export async function initFx(base, uiLocale) {
   const b = String(base || '').toUpperCase()
   baseCode.value = META[b] ? b : 'CNY'
-  if (!savedChoice) displayCode.value = uiLocale === 'zh' ? 'CNY' : 'USD'
+  if (!savedChoice) displayCode.value = currencyForLocale(uiLocale) || 'USD'
   try {
     const res = await fetch(`${API_BASE}/fx/rates?base=${baseCode.value}`, {
       headers: { Accept: 'application/json' }

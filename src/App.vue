@@ -7,7 +7,7 @@ import ChatWidget from './components/ChatWidget.vue'
 import { fetchCategories, fetchKeywords, fetchProducts, fetchProductDetail, fetchBrands, demoBrands } from './api.js'
 import { siteConfig } from './siteConfig.js'
 import { LANGS, locale, setLocale, t, tx, themeText } from './i18n.js'
-import { CURRENCIES, displayCode, baseCode, isConverted, formatPrice, initFx, setDisplay } from './utils/currency.js'
+import { CURRENCIES, displayCode, baseCode, isConverted, formatPrice, initFx, setDisplay, currencyForLocale } from './utils/currency.js'
 
 const THEMES = {
   a: { label: 'A · Classic Mall' },
@@ -57,7 +57,19 @@ watch(() => siteConfig.logo, (logo) => {
 
 const langOpen = ref(false)
 const currentLang = computed(() => LANGS.find((l) => l.code === locale.value) || LANGS[0])
-function pickLang(code) { setLocale(code); langOpen.value = false }
+// Soft link: changing the language also brings its default currency
+// along (see LANG_CURRENCY in utils/currency.js). The currency pill
+// stays independently clickable afterwards — a manual pickCurrency is
+// honoured until the next language change. Demo mode has no currency
+// switcher, so the link is skipped there.
+function pickLang(code) {
+  setLocale(code)
+  if (!demoMode.value) {
+    const linked = currencyForLocale(code)
+    if (linked) setDisplay(linked)
+  }
+  langOpen.value = false
+}
 
 const curOpen = ref(false)
 function pickCurrency(code) { setDisplay(code); curOpen.value = false }
