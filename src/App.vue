@@ -8,7 +8,7 @@ import ChatWidget from './components/ChatWidget.vue'
 import SocialWidget from './components/SocialWidget.vue'
 import { fetchCategories, fetchKeywords, fetchProducts, fetchProductDetail, fetchBrands, demoBrands, fetchFormulaBrands, fetchFormulaModels, fetchFormulaSearch, fetchFormulaDetail, fetchCustomPage } from './api.js'
 import { siteConfig } from './siteConfig.js'
-import { LANGS, locale, setLocale, t, tx, themeText } from './i18n.js'
+import { LANGS, locale, setLocale, t, tx } from './i18n.js'
 import { CURRENCIES, displayCode, baseCode, isConverted, formatPrice, initFx, setDisplay, currencyForLocale } from './utils/currency.js'
 import { startTracking, trackView, trackClick } from './utils/track.js'
 import { buildChatProduct, saveChatProduct } from './utils/chatProduct.js'
@@ -104,8 +104,11 @@ function pickCurrency(code) { setDisplay(code); curOpen.value = false }
 
 const cartCount = computed(() => cart.value.reduce((s, i) => s + i.qty, 0))
 const meta = computed(() => THEMES[theme.value])
-const heroTitle = computed(() => siteConfig.heroTitle || themeText(theme.value).headline)
-const heroSub = computed(() => siteConfig.heroSubtitle || themeText(theme.value).sub)
+// Hero copy comes only from the admin site config — there is no theme
+// default fallback: an empty field hides that line on the storefront.
+const heroTitle = computed(() => siteConfig.heroTitle)
+const heroSub = computed(() => siteConfig.heroSubtitle)
+const heroEyebrow = computed(() => siteConfig.heroEyebrow)
 // Hero side column: the contact card (showContact, default on — contact
 // details only, no dealer wording), falling back to the dealer card only
 // when the contact card is off and the dealer card is on. (The RFQ form
@@ -775,9 +778,9 @@ onMounted(async () => {
           </aside>
 
           <div class="hero-main">
-            <p class="hero-eyebrow">{{ siteConfig.heroEyebrow || meta.label }}</p>
-            <h1>{{ heroTitle }}</h1>
-            <p class="hero-sub">{{ heroSub }}</p>
+            <p class="hero-eyebrow" v-if="heroEyebrow">{{ heroEyebrow }}</p>
+            <h1 v-if="heroTitle">{{ heroTitle }}</h1>
+            <p class="hero-sub" v-if="heroSub">{{ heroSub }}</p>
             <p class="hero-stats" v-if="theme === 'b' || theme === 'h'"><b>1,038</b> {{ t('statFormulas') }} <b>128</b> {{ t('statToners') }} <b>50+</b> {{ t('statMarkets') }}</p>
           </div>
 

@@ -5,8 +5,8 @@ import { reactive } from 'vue'
 // fallback defaults when the backend is unavailable.
 export const siteConfig = reactive({
   defaultTheme: 'h', // one of a–h, selected by the admin for all visitors
-  heroTitle: '', // overrides the theme headline when set
-  heroSubtitle: '', // overrides the theme sub-line when set
+  heroTitle: '', // homepage hero headline; empty = the line is not shown
+  heroSubtitle: '', // homepage hero sub-line; empty = the line is not shown
   announcement: '', // thin notice shown in the top bar when set
   showRfq: true, // RFQ panel + section visibility
   showCart: false, // cart buttons/drawer + orders link; hidden unless the admin turns it on (inquiry-site default)
@@ -23,7 +23,7 @@ export const siteConfig = reactive({
   // means "use the built-in theme/i18n default" on the storefront.
   navigationConfigured: false,
   navItems: [], // top navigation [{label, link, type?, categoryId?}]; empty = i18n zone labels
-  heroEyebrow: '', // overrides the theme label above the headline
+  heroEyebrow: '', // small line above the hero headline; empty = not shown
   dealerTitle: '', // dealer (distributor) card title
   dealerText: '', // dealer card body text
   dealerButton: '', // dealer card button label
