@@ -491,10 +491,13 @@ onMounted(async () => {
         <div class="detail-info">
           <p class="card-cat">{{ tx(selected.category) }}</p>
           <h1>{{ tx(selected.name) }}</h1>
-          <p class="detail-price"><b>{{ formatPrice(selected.price) }}</b>
-            <s v-if="selected.otPrice > selected.price">{{ formatPrice(selected.otPrice) }}</s>
-            <small v-if="selected.unit && String(selected.unit).trim() && String(selected.unit).trim() !== '无'">/ {{ tx(selected.unit) }}</small></p>
-          <p v-if="isConverted" class="fx-note">{{ t('fxNote', { base: baseCode }) }}</p>
+          <p class="detail-price"><b v-if="selected.negotiable" class="price-negotiable">{{ t('negotiable') }}</b>
+            <template v-else>
+              <b>{{ formatPrice(selected.price) }}</b>
+              <s v-if="selected.otPrice > selected.price">{{ formatPrice(selected.otPrice) }}</s>
+              <small v-if="selected.unit && String(selected.unit).trim() && String(selected.unit).trim() !== '无'">/ {{ tx(selected.unit) }}</small>
+            </template></p>
+          <p v-if="isConverted && !selected.negotiable" class="fx-note">{{ t('fxNote', { base: baseCode }) }}</p>
           <p v-if="selected.blurb" class="detail-blurb">{{ tx(selected.blurb) }}</p>
 
           <div v-if="selected.moq" class="detail-tiers">
@@ -508,7 +511,7 @@ onMounted(async () => {
           <p v-else class="detail-blurb">{{ t('tdsNote') }}</p>
 
           <div class="detail-actions" :class="{ 'actions-solo': !siteConfig.showCart }">
-            <button v-if="siteConfig.showCart" class="btn btn-primary" @click="addToCart(selected)">{{ t('addToCart') }}</button>
+            <button v-if="siteConfig.showCart && !selected.negotiable" class="btn btn-primary" @click="addToCart(selected)">{{ t('addToCart') }}</button>
             <button class="btn btn-ghost" @click="requestQuote(selected)">{{ t('requestQuote') }}</button>
           </div>
           <p class="trust" v-if="theme === 'b'">{{ t('trustText') }}</p>
