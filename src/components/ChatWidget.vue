@@ -9,6 +9,7 @@ import { chatStart, chatSend, chatPull, chatPing, chatTyping } from '../api.js'
 import { EMOJIS, isEmojiOnlyMessage } from '../emojis.js'
 import { t } from '../i18n.js'
 import { trackClick } from '../utils/track.js'
+import { loadChatProduct, saveChatProduct } from '../utils/chatProduct.js'
 
 const LS_TOKEN = 'taojie-chat-token'
 const LS_NAME = 'taojie-chat-name'
@@ -25,6 +26,11 @@ const unread = ref(0)
 const agentTyping = ref(false)
 const emojiOpen = ref(false)
 const listEl = ref(null)
+// Product the visitor is asking about (set when they tap 询价 on a
+// product). Shown as a pinned card above the messages and mirrored to
+// the backend session so agents see it in the admin console.
+const product = ref(null)
+let syncedProductJson = ''
 let lastId = 0
 let timer = null
 let pingTimer = null
@@ -56,17 +62,41 @@ async function scrollToBottom() {
 async function startChat() {
   const name = (nameInput.value || visitorName.value || '').trim()
   try {
-    const r = await chatStart({ name, token: token.value, referrer: referrer(), ...pageInfo() })
+    const r = await chatStart({ name, token: token.value, referrer: referrer(), ...pageInfo(), product: product.value || undefined })
     token.value = r.token
     visitorName.value = r.name || name
     lsSet(LS_TOKEN, token.value)
     if (visitorName.value) lsSet(LS_NAME, visitorName.value)
+    syncedProductJson = product.value ? JSON.stringify(product.value) : ''
     offline.value = false
     await pull(true)
   } catch {
     offline.value = true
   }
 }
+
+// Mirror the local product attachment to the backend session (only when
+// it changed; silently skipped in demo mode / while offline).
+async function syncProduct() {
+  if (!token.value) return
+  const want = product.value ? JSON.stringify(product.value) : ''
+  if (want === syncedProductJson) return
+  try {
+    await chatStart({
+      token: token.value, ...pageInfo(),
+      ...(product.value ? { product: product.value } : { clearProduct: true })
+    })
+    syncedProductJson = want
+  } catch { /* best-effort: the local card still shows */ }
+}
+
+function setProduct(p) {
+  product.value = p || null
+  saveChatProduct(product.value)
+  syncProduct()
+}
+
+function removeProduct() { setProduct(null) }
 
 async function pull(reset = false) {
   if (!token.value) return
@@ -137,12 +167,23 @@ function toggle() {
 
 // Other UI (e.g. the top-bar "Help" link) opens the chat panel through
 // this window event, so the panel state stays owned by this component.
-function openFromOutside() { if (!open.value) toggle() }
+// The event may carry `detail.product` (a snapshot from utils/chatProduct)
+// when the visitor tapped 询价 on a product; no detail = leave the
+// current attachment untouched.
+function openFromOutside(e) {
+  const p = e && e.detail ? e.detail.product : undefined
+  if (p) setProduct(p)
+  if (!open.value) toggle()
+}
 
 onMounted(() => {
   token.value = lsGet(LS_TOKEN)
   visitorName.value = lsGet(LS_NAME)
   nameInput.value = visitorName.value
+  product.value = loadChatProduct()
+  // The local snapshot is what this browser last attached; treat it as
+  // the session's baseline so we only sync on real changes.
+  syncedProductJson = product.value ? JSON.stringify(product.value) : ''
   if (token.value) pull(true)
   timer = setInterval(() => { if (token.value) pull() }, 3000)
   // Heartbeat only while the chat panel is open (20s cadence).
@@ -167,6 +208,17 @@ onBeforeUnmount(() => {
       <div class="chat-head">
         <b>{{ t('chatTitle') }}</b>
         <button class="chat-close" type="button" aria-label="Close" @click="toggle">✕</button>
+      </div>
+
+      <!-- Product the visitor is asking about (set via 询价 on a product). -->
+      <div v-if="product" class="chat-product">
+        <img v-if="product.image" :src="product.image" alt="" @error="$event.target.remove()" />
+        <div class="chat-product-info">
+          <span class="chat-product-label">{{ t('chatProductLabel') }}</span>
+          <b class="chat-product-name">{{ product.name }}</b>
+          <span class="chat-product-price">{{ product.negotiable ? t('negotiable') : product.priceLabel }}</span>
+        </div>
+        <button class="chat-product-remove" type="button" :aria-label="t('chatProductRemove')" @click="removeProduct">✕</button>
       </div>
 
       <!-- First visit: ask for a name (skippable), then start the session. -->
@@ -240,6 +292,24 @@ onBeforeUnmount(() => {
 }
 .chat-head b { font-size: 15px; font-weight: 600; }
 .chat-close { border: none; background: transparent; color: #fff; font-size: 15px; cursor: pointer; }
+/* Attached-product card pinned above the messages / start form. */
+.chat-product {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-bottom: 1px solid rgba(0, 0, 0, .08);
+  background: rgba(0, 0, 0, .035);
+}
+.chat-product img { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+.chat-product-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.chat-product-label { font-size: 11px; color: #8a8fa3; }
+.chat-product-name {
+  font-size: 13.5px; font-weight: 600; line-height: 1.35;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.chat-product-price { font-size: 12.5px; color: var(--brand); font-weight: 600; }
+.chat-product-remove {
+  border: none; background: transparent; cursor: pointer; flex-shrink: 0;
+  font-size: 13px; color: #8a8fa3; padding: 4px 6px;
+}
 .chat-start { padding: 18px 16px; display: flex; flex-direction: column; gap: 10px; }
 .chat-start p { margin: 0; opacity: .75; }
 .chat-start input {

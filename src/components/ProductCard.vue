@@ -3,7 +3,10 @@ import { computed } from 'vue'
 import { t, tx } from '../i18n.js'
 import { siteConfig } from '../siteConfig.js'
 import { formatPrice } from '../utils/currency.js'
+import { showAsNegotiable } from '../utils/pricing.js'
 const props = defineProps({ product: { type: Object, required: true }, theme: { type: String, default: 'h' } })
+// 面议 display = the product's own flag OR the admin's global price switch off.
+const negotiable = computed(() => showAsNegotiable(props.product))
 defineEmits(['open', 'add', 'quote'])
 // Real data often has an empty unit or the literal '无' — show just the price then.
 const unitLabel = computed(() => {
@@ -31,14 +34,14 @@ const unitLabel = computed(() => {
       </ul>
 
       <!-- Theme G: tiered pricing (numeric tiers make no sense for 面议 goods) -->
-      <div v-if="theme === 'g' && product.moq && !product.negotiable" class="card-tiers">
+      <div v-if="theme === 'g' && product.moq && !negotiable" class="card-tiers">
         <span>{{ product.moq }}+ · {{ formatPrice(product.price) }}</span>
         <span>{{ product.moq * 5 }}+ · {{ formatPrice(product.price * 0.92) }}</span>
         <span>{{ product.moq * 20 }}+ · {{ formatPrice(product.price * 0.85) }}</span>
       </div>
 
       <p class="card-price">
-        <b v-if="product.negotiable" class="price-negotiable">{{ t('negotiable') }}</b>
+        <b v-if="negotiable" class="price-negotiable">{{ t('negotiable') }}</b>
         <template v-else>
           <b>{{ formatPrice(product.price) }}</b>
           <s v-if="product.otPrice > product.price">{{ formatPrice(product.otPrice) }}</s>
@@ -50,7 +53,7 @@ const unitLabel = computed(() => {
         <span v-if="product.moq">{{ t('moqLabel', { n: product.moq }) }}</span>
       </p>
       <div class="card-actions" :class="{ 'actions-solo': !siteConfig.showCart }" @click.stop>
-        <button v-if="siteConfig.showCart && !product.negotiable" class="btn btn-primary btn-sm" @click="$emit('add', product)">{{ t('addToCart') }}</button>
+        <button v-if="siteConfig.showCart && !negotiable" class="btn btn-primary btn-sm" @click="$emit('add', product)">{{ t('addToCart') }}</button>
         <button class="btn btn-ghost btn-sm" @click="$emit('quote', product)">{{ t('requestQuote') }}</button>
       </div>
     </div>

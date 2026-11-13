@@ -6,11 +6,13 @@ import CartDrawer from './components/CartDrawer.vue'
 import RfqPanel from './components/RfqPanel.vue'
 import ChatWidget from './components/ChatWidget.vue'
 import SocialWidget from './components/SocialWidget.vue'
-import { fetchCategories, fetchKeywords, fetchProducts, fetchProductDetail, fetchBrands, demoBrands, fetchFormulaBrands, fetchFormulaModels, fetchFormulaSearch, fetchFormulaDetail } from './api.js'
+import { fetchCategories, fetchKeywords, fetchProducts, fetchProductDetail, fetchBrands, demoBrands, fetchFormulaBrands, fetchFormulaModels, fetchFormulaSearch, fetchFormulaDetail, fetchCustomPage } from './api.js'
 import { siteConfig } from './siteConfig.js'
 import { LANGS, locale, setLocale, t, tx, themeText } from './i18n.js'
 import { CURRENCIES, displayCode, baseCode, isConverted, formatPrice, initFx, setDisplay, currencyForLocale } from './utils/currency.js'
 import { startTracking, trackView, trackClick } from './utils/track.js'
+import { buildChatProduct, saveChatProduct } from './utils/chatProduct.js'
+import { showAsNegotiable } from './utils/pricing.js'
 
 const THEMES = {
   a: { label: 'A · Classic Mall' },
@@ -28,7 +30,7 @@ const theme = computed(() => {
   return THEMES[key] ? key : 'h'
 })
 
-const view = ref('home') // 'home' | 'detail' | 'formula' | 'profile'
+const view = ref('home') // 'home' | 'detail' | 'formula' | 'profile' | 'page'
 const categories = ref([])
 const products = ref([])
 const keywords = ref([])
@@ -40,6 +42,9 @@ const searchedQuery = ref('')
 const activeCategory = ref('')
 const activeBrand = ref('')
 const selected = ref(null)
+// Detail page renders as 面议 when the product is negotiable OR the
+// admin's global price switch (showPrices) is off.
+const selectedNegotiable = computed(() => showAsNegotiable(selected.value))
 const expandedCategoryIds = ref(new Set())
 const navigationCategories = computed(() => {
   const result = []
@@ -55,6 +60,11 @@ const navigationCategories = computed(() => {
 const cart = ref([])
 const cartOpen = ref(false)
 const rfqProduct = ref('')
+// RFQ form lives in a global modal (no in-flow section any more);
+// rfqNonce remounts the panel per open so its form/done state resets
+// and the product prefill applies afresh.
+const rfqOpen = ref(false)
+const rfqNonce = ref(0)
 const toast = ref('')
 // Label of the page the visitor is currently on, for the statistics
 // beacon: heartbeats report it, trackView updates it at each stop.
@@ -96,13 +106,13 @@ const cartCount = computed(() => cart.value.reduce((s, i) => s + i.qty, 0))
 const meta = computed(() => THEMES[theme.value])
 const heroTitle = computed(() => siteConfig.heroTitle || themeText(theme.value).headline)
 const heroSub = computed(() => siteConfig.heroSubtitle || themeText(theme.value).sub)
-// Hero side column: theme G shows the compact RFQ panel there; every theme
-// otherwise shows the contact card (showContact, default on — contact
+// Hero side column: the contact card (showContact, default on — contact
 // details only, no dealer wording), falling back to the dealer card only
-// when the contact card is off and the dealer card is on. The column
+// when the contact card is off and the dealer card is on. (The RFQ form
+// used to sit here for theme G; it is a global modal now.) The column
 // exists only when one of them is enabled, so hiding them all leaves
 // no empty grid track.
-const heroSideVisible = computed(() => (theme.value === 'g' && siteConfig.showRfq) || siteConfig.showContact || siteConfig.showDealer)
+const heroSideVisible = computed(() => siteConfig.showContact || siteConfig.showDealer)
 // Top navigation: admin-configured navItems win; empty = i18n defaults
 // (label-only items with no click action).
 const zones = computed(() => navigationItems(siteConfig,t))
@@ -112,9 +122,10 @@ const zones = computed(() => navigationItems(siteConfig,t))
 // #… → anchor, anything else (or empty) → no action, as before.
 function navType(item) {
   const type = String(item.type || '')
-  if (type === 'category' || type === 'anchor' || type === 'external') return type
+  if (type === 'category' || type === 'anchor' || type === 'external' || type === 'page') return type
   const link = String(item.link || '')
   if (/^https?:\/\//i.test(link)) return 'external'
+  if (link.startsWith('#page/')) return 'page'
   if (link.startsWith('#')) return 'anchor'
   return ''
 }
@@ -127,6 +138,11 @@ function scrollToAnchor(id) {
 async function onNav(item) {
   trackClick(`导航:${item.label}`)
   const type = navType(item)
+  if (type === 'page') {
+    const slug = pageSlugFromLink(item.link) || pageSlugFromLink(item.pageSlug)
+    if (slug) { openCustomPage(slug); return }
+  }
+  clearPageHash()
   if (type === 'category') {
     await pickCategory(String(item.categoryId || ''))
     scrollToAnchor('catalogue')
@@ -135,6 +151,9 @@ async function onNav(item) {
     // from admin-configured nav items via the #formula / #profile links.
     if (item.link === '#formula') { openFormula(); return }
     if (item.link === '#profile') { openProfile(); return }
+    // The RFQ form is a modal now, not a page section: #rfq opens it
+    // from whatever view the visitor is on.
+    if (item.link === '#rfq') { openRfqModal(); return }
     const id = String(item.link || '').replace(/^#/, '')
     if (!id) return
     view.value = 'home'
@@ -143,6 +162,51 @@ async function onNav(item) {
     if (item.link) window.open(item.link, '_blank', 'noopener')
   }
 }
+
+// ---- Footer (admin-configured; built-in copy as fallback) ----
+// Blurb / note / copyright and the link columns come from the site
+// config's footer fields; anything unset falls back to the copy that
+// used to be hardcoded in the template, so the footer is never blank.
+const footerBlurbText = computed(() => tx(siteConfig.footerBlurb) || t('footerAbout'))
+const footerNoteText = computed(() => tx(siteConfig.footerNote) || t('noteText'))
+const footerCopyrightText = computed(() => {
+  const raw = tx(siteConfig.footerCopyright)
+  return raw ? raw.split('{year}').join(String(new Date().getFullYear())) : t('copyright', { theme: meta.value.label })
+})
+// A category link saved without a categoryId (the seeded defaults) is
+// matched by any of its labels against the live category names (full
+// path or leaf segment); no match = plain text.
+function matchFooterCategory(labels) {
+  const wanted = Object.values(labels || {}).map((v) => String(v || '').trim()).filter(Boolean)
+  if (!wanted.length) return ''
+  for (const c of categories.value) {
+    const name = tx(c.name)
+    if (wanted.includes(name) || wanted.includes(leafName(name))) return String(c.id)
+  }
+  return ''
+}
+// Build the nav-shaped dispatch item for a footer link, or null when
+// the link is text-only (type '' or an unresolvable target).
+function footerNavItem(link) {
+  const type = String(link.type || '')
+  const label = tx(link.labels)
+  if (type === 'category') {
+    const id = String(link.categoryId || '') || matchFooterCategory(link.labels)
+    return id ? { label, type: 'category', categoryId: id } : null
+  }
+  if (type === 'anchor' && link.link) return { label, type: 'anchor', link: String(link.link) }
+  if (type === 'page' && link.link) return { label, type: 'page', link: String(link.link) }
+  if (type === 'external' && link.link) return { label, type: 'external', link: String(link.link) }
+  return null
+}
+const footerCols = computed(() => (siteConfig.footerColumns || [])
+  .map((c) => ({
+    title: tx(c.title),
+    links: (c.links || [])
+      .map((l) => ({ label: tx(l.labels), item: footerNavItem(l) }))
+      .filter((l) => l.label)
+  }))
+  .filter((c) => c.title || c.links.length))
 
 // Real category names are full paths ("汽车油漆 / 1K银粉色母系列 / 1K银粉色母系列");
 // compact UI spots show only the leaf segment.
@@ -306,6 +370,52 @@ function openProfile() {
   window.scrollTo({ top: 0 })
   loadProfileShowcase()
 }
+// ---- Custom pages (admin-authored standalone pages) ----
+// A nav item of type 'page' carries its target as link '#page/<slug>';
+// the view also opens on a matching location.hash, so shared links and
+// refreshes land on the page. Content comes from /api/pages/:slug; a
+// hidden or unknown slug (or an unreachable backend without a bundled
+// sample) lands on the pageNotFound empty state.
+const PAGE_SLUG_RE = /^[a-z0-9][a-z0-9-]{1,60}$/
+function pageSlugFromLink(link) {
+  const raw = String(link || '').trim()
+  const slug = raw.startsWith('#page/') ? raw.slice(6) : raw.startsWith('page/') ? raw.slice(5) : raw
+  return PAGE_SLUG_RE.test(slug) ? slug : ''
+}
+function pageSlugFromHash(hash) {
+  const raw = String(hash || '')
+  return raw.startsWith('#page/') ? pageSlugFromLink(raw) : ''
+}
+function clearPageHash() {
+  if (pageSlugFromHash(window.location.hash)) {
+    history.replaceState(null, '', window.location.pathname + window.location.search)
+  }
+}
+const customPage = ref(null)
+const customPageSlug = ref('')
+const customPageLoading = ref(false)
+let customPageRequest = 0
+async function openCustomPage(slug) {
+  if (!PAGE_SLUG_RE.test(String(slug || ''))) return
+  const targetHash = `#page/${slug}`
+  if (window.location.hash !== targetHash) history.replaceState(null, '', targetHash)
+  view.value = 'page'
+  customPageSlug.value = slug
+  customPage.value = null
+  customPageLoading.value = true
+  currentPageLabel.value = `page:${slug}`; trackView(currentPageLabel.value)
+  window.scrollTo({ top: 0 })
+  const request = ++customPageRequest
+  const { item, demo } = await fetchCustomPage(slug)
+  if (request !== customPageRequest) return
+  noteDemo(demo)
+  customPage.value = item
+  customPageLoading.value = false
+}
+// Sections that resolve to nothing in every language (and carry no
+// image) are dropped, same rule as the profile page sections.
+const customPageSections = computed(() => (customPage.value?.sections || [])
+  .filter((s) => s && (tx(s.title) || sectionParas(s).length || sectionImage(s))))
 // ---- Company profile (native page, prototype layout) ----
 // profileContent is shape-guarded by the backend and normalised by
 // mergeConfig; the filters here only drop unusable entries. Sections
@@ -511,11 +621,30 @@ function addToCart(p) {
 function removeFromCart(id) { cart.value = cart.value.filter((i) => String(i.id) !== String(id)) }
 // Top-bar Help opens the online chat panel (ChatWidget listens for this).
 function openHelpChat() { window.dispatchEvent(new Event('tj-open-chat')) }
+// 索取报价 / 联系销售 entries open the RFQ modal (globally mounted, so
+// it works from any view). showRfq stays the admin kill-switch: with it
+// off, the entries are inert just like the old hidden section was.
 function requestQuote(p) {
   trackClick('点联系销售/询价')
   rfqProduct.value = p ? tx(p.name) : ''
-  view.value = 'home'
-  setTimeout(() => document.getElementById('rfq')?.scrollIntoView({ behavior: 'smooth' }), 60)
+  openRfqModal()
+}
+function openRfqModal() {
+  if (!siteConfig.showRfq) return
+  rfqNonce.value += 1
+  rfqOpen.value = true
+}
+function closeRfqModal() { rfqOpen.value = false }
+// 询价 on a product (card / detail page): open the online chat with the
+// product attached, instead of scrolling to the RFQ form. The ChatWidget
+// owns the attachment state; it also persists locally so the widget
+// still shows the product card when it mounts after this event.
+function requestQuoteChat(p) {
+  const snapshot = buildChatProduct(p)
+  if (!snapshot) return
+  trackClick('询价打开聊天')
+  saveChatProduct(snapshot)
+  window.dispatchEvent(new CustomEvent('tj-open-chat', { detail: { product: snapshot } }))
 }
 
 async function refreshCatalogue() {
@@ -564,6 +693,15 @@ onMounted(async () => {
   trackView('home')
   await refreshCatalogue()
   if (!demoMode.value) initFx(siteConfig.baseCurrency, locale.value)
+  // Direct link / refresh on a custom page: #page/<slug> opens that
+  // page, and later hash edits to a page link do the same.
+  const initialSlug = pageSlugFromHash(window.location.hash)
+  if (initialSlug) openCustomPage(initialSlug)
+  window.addEventListener('hashchange', () => {
+    const slug = pageSlugFromHash(window.location.hash)
+    if (slug && slug !== customPageSlug.value) openCustomPage(slug)
+  })
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeRfqModal() })
 })
 </script>
 
@@ -644,8 +782,7 @@ onMounted(async () => {
           </div>
 
           <aside v-if="heroSideVisible" class="hero-side">
-            <RfqPanel v-if="theme === 'g' && siteConfig.showRfq" :product-name="rfqProduct" compact />
-            <div v-else-if="siteConfig.showContact" id="dealer" class="promo">
+            <div v-if="siteConfig.showContact" id="dealer" class="promo">
               <h3>{{ t('contact') }}</h3>
               <p>{{ t('contactText') }}</p>
               <p v-if="siteConfig.hotline" class="promo-tel">{{ t('exportHotline') }}<br /><b>{{ siteConfig.hotline }}</b></p>
@@ -675,6 +812,7 @@ onMounted(async () => {
           <h2>{{ resultsTitle }}</h2>
           <span v-if="loading">{{ t('loading') }}</span>
           <span v-else>{{ t('productsCount', { n: products.length }) }}</span>
+          <button v-if="siteConfig.showRfq" class="btn btn-primary btn-sm catalogue-rfq" @click="requestQuote(null)">{{ t('rfqTitle') }}</button>
         </div>
         <div v-if="brands.length" class="brands">
           <button type="button" :class="{ active: !activeBrand }" @click="pickBrand('')">{{ t('allProducts') }}</button>
@@ -683,14 +821,10 @@ onMounted(async () => {
         <div v-if="!loading && !products.length" class="empty">{{ t('empty') }}</div>
         <div class="grid">
           <ProductCard v-for="p in products" :key="p.id" :product="p" :theme="theme"
-            @open="openProduct" @add="addToCart" @quote="requestQuote" />
+            @open="openProduct" @add="addToCart" @quote="requestQuoteChat" />
         </div>
       </section>
 
-      <!-- RFQ -->
-      <section v-if="siteConfig.showRfq" id="rfq" class="wrap rfq-section">
-        <RfqPanel :product-name="rfqProduct" />
-      </section>
     </main>
 
     <!-- Detail view -->
@@ -708,16 +842,16 @@ onMounted(async () => {
         <div class="detail-info">
           <p class="card-cat">{{ tx(selected.category) }}</p>
           <h1>{{ tx(selected.name) }}</h1>
-          <p class="detail-price"><b v-if="selected.negotiable" class="price-negotiable">{{ t('negotiable') }}</b>
+          <p class="detail-price"><b v-if="selectedNegotiable" class="price-negotiable">{{ t('negotiable') }}</b>
             <template v-else>
               <b>{{ formatPrice(selected.price) }}</b>
               <s v-if="selected.otPrice > selected.price">{{ formatPrice(selected.otPrice) }}</s>
               <small v-if="selected.unit && String(selected.unit).trim() && String(selected.unit).trim() !== '无'">/ {{ tx(selected.unit) }}</small>
             </template></p>
-          <p v-if="isConverted && !selected.negotiable" class="fx-note">{{ t('fxNote', { base: baseCode }) }}</p>
+          <p v-if="isConverted && !selectedNegotiable" class="fx-note">{{ t('fxNote', { base: baseCode }) }}</p>
           <p v-if="selected.blurb" class="detail-blurb">{{ tx(selected.blurb) }}</p>
 
-          <div v-if="selected.moq" class="detail-tiers">
+          <div v-if="selected.moq && !selectedNegotiable" class="detail-tiers">
             <h3>{{ t('tiersTitle') }}</h3>
             <p>{{ t('tiersText', { moq: selected.moq, unit: tx(selected.unit), moq5: selected.moq * 5, moq20: selected.moq * 20 }) }}</p>
           </div>
@@ -728,8 +862,8 @@ onMounted(async () => {
           <p v-else class="detail-blurb">{{ t('tdsNote') }}</p>
 
           <div class="detail-actions" :class="{ 'actions-solo': !siteConfig.showCart }">
-            <button v-if="siteConfig.showCart && !selected.negotiable" class="btn btn-primary" @click="addToCart(selected)">{{ t('addToCart') }}</button>
-            <button class="btn btn-ghost" @click="requestQuote(selected)">{{ t('requestQuote') }}</button>
+            <button v-if="siteConfig.showCart && !selectedNegotiable" class="btn btn-primary" @click="addToCart(selected)">{{ t('addToCart') }}</button>
+            <button class="btn btn-ghost" @click="requestQuoteChat(selected)">{{ t('requestQuote') }}</button>
           </div>
           <p class="trust" v-if="theme === 'b'">{{ t('trustText') }}</p>
         </div>
@@ -834,7 +968,7 @@ onMounted(async () => {
           <h2 class="profile-block-title">{{ t('ourProducts') }}</h2>
           <div class="grid">
             <ProductCard v-for="p in featuredProducts" :key="p.id" :product="p" :theme="theme"
-              @open="openProduct" @add="addToCart" @quote="requestQuote" />
+              @open="openProduct" @add="addToCart" @quote="requestQuoteChat" />
           </div>
         </section>
         <section v-if="aboutSection" class="profile-block profile-about" :class="{ 'no-img': !sectionImage(aboutSection) }">
@@ -946,31 +1080,95 @@ onMounted(async () => {
       <button class="btn btn-primary" @click="requestQuote(null)">{{ t('talkToSales') }}</button>
     </main>
 
+    <!-- Custom page view (admin-authored standalone page): hero band
+         with the page title, its sections and gallery, then the same
+         contact card that closes the company-profile page. -->
+    <template v-else-if="view === 'page'">
+      <template v-if="customPage">
+        <section class="page-band">
+          <div class="wrap page-band-in">
+            <h1>{{ tx(customPage.titles) }}</h1>
+          </div>
+        </section>
+        <main class="wrap profile-page">
+          <section v-for="(s, i) in customPageSections" :key="i" class="profile-block">
+            <h2 v-if="tx(s.title)" class="profile-block-title">{{ tx(s.title) }}</h2>
+            <img v-if="sectionImage(s)" class="profile-section-img" :src="sectionImage(s)" :alt="tx(s.title)" loading="lazy" />
+            <p v-for="(para, j) in sectionParas(s)" :key="j">{{ para }}</p>
+          </section>
+          <div v-if="customPage.gallery.length" class="profile-factory-grid">
+            <img v-for="(img, i) in customPage.gallery" :key="i" :src="img" :class="{ wide: i === 0 }" :alt="tx(customPage.titles)" loading="lazy" />
+          </div>
+          <section class="profile-contact-band">
+            <div class="profile-promo">
+              <h3>{{ t('contact') }}</h3>
+              <p>{{ t('contactText') }}</p>
+              <p v-if="siteConfig.hotline" class="promo-tel">{{ t('exportHotline') }}<br /><b>{{ siteConfig.hotline }}</b></p>
+              <p v-if="siteConfig.whatsapp" class="promo-tel">{{ t('whatsappLabel') }}<br /><b>{{ siteConfig.whatsapp }}</b></p>
+              <p v-if="siteConfig.email" class="promo-tel">{{ t('emailLabel') }}<br /><b>{{ siteConfig.email }}</b></p>
+              <button class="btn btn-light" @click="requestQuote(null)">{{ t('talkToSales') }}</button>
+            </div>
+          </section>
+        </main>
+      </template>
+      <main v-else class="wrap profile-page">
+        <p v-if="customPageLoading" class="empty">{{ t('loading') }}</p>
+        <div v-else class="empty">{{ t('pageNotFound') }}</div>
+      </main>
+    </template>
+
     <footer class="footer">
       <div class="wrap footer-in">
         <div>
           <p class="logo logo-foot">TAOJIE<span class="logo-dot">.</span></p>
-          <p>{{ t('footerAbout') }}</p>
+          <p>{{ footerBlurbText }}</p>
         </div>
-        <div>
-          <h4>{{ t('shop') }}</h4><p>{{ tx('Automotive Paint') }}<br />{{ tx('Primers & Clear Coats') }}<br />{{ tx('Home & Living') }}<br />{{ tx('Appliances') }}</p>
-        </div>
-        <div>
-          <h4>{{ t('buyers') }}</h4><p>{{ t('rfqTitle') }}<br />{{ tx('Distributor Program') }}<br />{{ tx('Private Label') }}<br />{{ tx('Samples') }}</p>
-        </div>
+        <!-- Link columns from the site config (「页脚」 page in the
+             admin); links dispatch through onNav like nav items, and
+             text-only links render as plain spans. -->
+        <template v-if="footerCols.length">
+          <div v-for="(col, ci) in footerCols" :key="ci">
+            <h4>{{ col.title }}</h4>
+            <p>
+              <template v-for="(l, li) in col.links" :key="li">
+                <a v-if="l.item" href="#" @click.prevent="onNav(l.item)">{{ l.label }}</a>
+                <span v-else>{{ l.label }}</span>
+                <br v-if="li < col.links.length - 1" />
+              </template>
+            </p>
+          </div>
+        </template>
+        <!-- Fallback: the previously hardcoded columns, used whenever
+             the config carries no usable columns. -->
+        <template v-else>
+          <div>
+            <h4>{{ t('shop') }}</h4><p>{{ tx('Automotive Paint') }}<br />{{ tx('Primers & Clear Coats') }}<br />{{ tx('Home & Living') }}<br />{{ tx('Appliances') }}</p>
+          </div>
+          <div>
+            <h4>{{ t('buyers') }}</h4><p>{{ t('rfqTitle') }}<br />{{ tx('Distributor Program') }}<br />{{ tx('Private Label') }}<br />{{ tx('Samples') }}</p>
+          </div>
+        </template>
         <div v-if="siteConfig.whatsapp || siteConfig.email">
           <h4>{{ t('contact') }}</h4>
           <p><span v-if="siteConfig.whatsapp">{{ t('whatsappLabel') }}<br />{{ siteConfig.whatsapp }}<br /></span><span v-if="siteConfig.email">{{ t('emailLabel') }}<br />{{ siteConfig.email }}</span></p>
         </div>
         <div>
           <h4>{{ t('note') }}</h4>
-          <p>{{ t('noteText') }}</p>
+          <p>{{ footerNoteText }}</p>
           <p v-if="demoMode" class="demo-flag">{{ t('demoFlag') }}</p>
         </div>
       </div>
-      <p class="wrap copyright">{{ t('copyright', { theme: meta.label }) }}</p>
+      <p class="wrap copyright">{{ footerCopyrightText }}</p>
     </footer>
 
+    <!-- RFQ modal: the 索取报价 form as a global overlay (replaces the
+         old in-flow section at the bottom of the home view). -->
+    <div v-if="rfqOpen" class="modal-backdrop" @click="closeRfqModal">
+      <div class="modal-card" role="dialog" aria-modal="true" :aria-label="t('rfqTitle')" @click.stop>
+        <button class="icon-btn modal-close" @click="closeRfqModal" aria-label="Close">×</button>
+        <RfqPanel :key="rfqNonce" :product-name="rfqProduct" />
+      </div>
+    </div>
     <CartDrawer :open="cartOpen" :items="cart" @close="cartOpen = false" @remove="removeFromCart" @clear="cart = []" />
     <SocialWidget />
     <ChatWidget />
