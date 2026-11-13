@@ -30,7 +30,7 @@ export const siteConfig = reactive({
   storyTitle: '', // brand story title (theme F section)
   storyText: '', // brand story body text
   profileUrl: 'https://williscarpaint.com/', // legacy: the profile page used to iframe this URL; kept only so old config files still parse — the storefront no longer reads it (profile is a native page now)
-  profileContent: { heroImages: [], sections: [], gallery: [] }, // company profile content (native page): hero carousel URLs, sections [{ title/body: {lang: text}, bullets: [{lang: text}] }], gallery URLs
+  profileContent: { heroImages: [], sections: [], gallery: [], faqs: [], testimonials: [] }, // company profile content (native page): hero carousel URLs, sections [{ title/body: {lang: text} (body paragraphs split on blank lines), bullets: [{lang: text}], image }], gallery URLs, faqs [{ q/a: {lang: text} }], testimonials [{ name, text: {lang: text} }]
   // "Start Chat with" floating panel (SocialWidget): full profile URLs;
   // empty = that icon is hidden. wechat is an account ID (tap copies it).
   // whatsapp / email / hotline above are reused as panel icons too.
@@ -81,7 +81,9 @@ function mergeConfig(data) {
         siteConfig.profileContent = {
           heroImages: Array.isArray(data[k].heroImages) ? data[k].heroImages : [],
           sections: Array.isArray(data[k].sections) ? data[k].sections : [],
-          gallery: Array.isArray(data[k].gallery) ? data[k].gallery : []
+          gallery: Array.isArray(data[k].gallery) ? data[k].gallery : [],
+          faqs: Array.isArray(data[k].faqs) ? data[k].faqs : [],
+          testimonials: Array.isArray(data[k].testimonials) ? data[k].testimonials : []
         }
       }
       continue

@@ -319,10 +319,23 @@ function sectionParas(s) {
 function sectionBullets(s) {
   return (s?.bullets || []).map((b) => tx(b)).filter(Boolean)
 }
+function sectionImage(s) {
+  return typeof s?.image === 'string' && s.image ? s.image : ''
+}
 const customSections = computed(() => (siteConfig.profileContent?.sections || [])
-  .filter((s) => s && (tx(s.title) || sectionParas(s).length || sectionBullets(s).length)))
+  .filter((s) => s && (tx(s.title) || sectionParas(s).length || sectionBullets(s).length || sectionImage(s))))
+// Testimonials / FAQs: entries that resolve to nothing in every
+// language are dropped; both blocks render only when non-empty.
+const profileTestimonials = computed(() => (siteConfig.profileContent?.testimonials || [])
+  .filter((x) => x && tx(x.text)))
+const profileFaqs = computed(() => (siteConfig.profileContent?.faqs || [])
+  .filter((f) => f && tx(f.q)))
+function faqParas(f) {
+  return String(tx(f?.a) || '').split(/\n+/).map((p) => p.trim()).filter(Boolean)
+}
 const profileHasCustom = computed(() => profileHeroImages.value.length > 0
-  || customSections.value.length > 0 || profileGallery.value.length > 0)
+  || customSections.value.length > 0 || profileGallery.value.length > 0
+  || profileTestimonials.value.length > 0 || profileFaqs.value.length > 0)
 // Hero carousel: advance every 3s while the custom profile is on
 // screen; a single always-on interval with guards keeps it simple.
 const heroIdx = ref(0)
@@ -671,6 +684,7 @@ onMounted(async () => {
         </div>
         <section v-for="(s, i) in customSections" :key="i" class="profile-section">
           <h2 v-if="tx(s.title)">{{ tx(s.title) }}</h2>
+          <img v-if="sectionImage(s)" class="profile-section-img" :src="sectionImage(s)" :alt="tx(s.title) || t('companyProfile')" loading="lazy" />
           <p v-for="(para, j) in sectionParas(s)" :key="j">{{ para }}</p>
           <ul v-if="sectionBullets(s).length">
             <li v-for="(b, j) in sectionBullets(s)" :key="j">{{ b }}</li>
@@ -679,6 +693,22 @@ onMounted(async () => {
         <div v-if="profileGallery.length" class="profile-gallery">
           <img v-for="(img, i) in profileGallery" :key="i" :src="img" :alt="t('companyProfile')" loading="lazy" />
         </div>
+        <section v-if="profileTestimonials.length" class="profile-testimonials">
+          <h2>{{ t('testimonials') }}</h2>
+          <div class="testimonial-grid">
+            <blockquote v-for="(x, i) in profileTestimonials" :key="i" class="testimonial-card">
+              <p>{{ tx(x.text) }}</p>
+              <cite v-if="x.name">— {{ x.name }}</cite>
+            </blockquote>
+          </div>
+        </section>
+        <section v-if="profileFaqs.length" class="profile-faqs">
+          <h2>{{ t('faqs') }}</h2>
+          <details v-for="(f, i) in profileFaqs" :key="i" class="faq-item">
+            <summary>{{ tx(f.q) }}</summary>
+            <p v-for="(para, j) in faqParas(f)" :key="j">{{ para }}</p>
+          </details>
+        </section>
         <div class="profile-promo">
           <h3>{{ t('contact') }}</h3>
           <p>{{ t('contactText') }}</p>
