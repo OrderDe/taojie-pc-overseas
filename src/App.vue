@@ -1,6 +1,6 @@
 <script setup>
 import { navigationItems } from './utils/navigation'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import ProductCard from './components/ProductCard.vue'
 import CartDrawer from './components/CartDrawer.vue'
 import RfqPanel from './components/RfqPanel.vue'
@@ -304,14 +304,17 @@ function openProfile() {
   view.value = 'profile'
   currentPageLabel.value = 'profile'; trackView('profile')
   window.scrollTo({ top: 0 })
+  loadProfileShowcase()
 }
-// ---- Company profile (native page) ----
+// ---- Company profile (native page, prototype layout) ----
 // profileContent is shape-guarded by the backend and normalised by
 // mergeConfig; the filters here only drop unusable entries. Sections
-// that resolve to nothing in every language are skipped entirely.
-// When no custom content exists at all, the profile view falls back
-// to the storyTitle/storyText text version.
-const profileHeroImages = computed(() => (siteConfig.profileContent?.heroImages || []).filter((u) => typeof u === 'string' && u))
+// are matched to layout slots by title keywords — every stored
+// language is searched, so a section keeps its slot whatever UI
+// language the visitor picked; sections matched to no slot render in
+// the two-column zone, so no stored content is ever lost. When no
+// custom content exists at all, the profile view falls back to the
+// storyTitle/storyText text version.
 const profileGallery = computed(() => (siteConfig.profileContent?.gallery || []).filter((u) => typeof u === 'string' && u))
 function sectionParas(s) {
   return String(tx(s?.body) || '').split(/\n+/).map((p) => p.trim()).filter(Boolean)
@@ -324,6 +327,73 @@ function sectionImage(s) {
 }
 const customSections = computed(() => (siteConfig.profileContent?.sections || [])
   .filter((s) => s && (tx(s.title) || sectionParas(s).length || sectionBullets(s).length || sectionImage(s))))
+
+// Banner: title/subtitle are {lang: text} maps and the image a plain
+// URL. A missing banner title falls back to the story title, then to
+// the page name, so the band is never blank.
+const profileBanner = computed(() => {
+  const b = siteConfig.profileContent?.banner
+  const o = b && typeof b === 'object' && !Array.isArray(b) ? b : {}
+  return {
+    title: o.title && typeof o.title === 'object' && !Array.isArray(o.title) ? o.title : {},
+    subtitle: o.subtitle && typeof o.subtitle === 'object' && !Array.isArray(o.subtitle) ? o.subtitle : {},
+    image: typeof o.image === 'string' ? o.image : ''
+  }
+})
+const bannerTitle = computed(() => tx(profileBanner.value.title) || siteConfig.storyTitle || t('companyProfile'))
+const bannerSubtitle = computed(() => tx(profileBanner.value.subtitle))
+
+// Section → layout-slot matching by title keywords. Order matters:
+// "Technical Team & Support" contains "Support", so the tech matcher
+// runs before the support one. There is deliberately no slot for the
+// product-lineup section: the live category / featured blocks below
+// replace it, and the section itself still renders via the
+// unmatched-sections zone.
+const SECTION_MATCHERS = [
+  ['about', ['关于我们', 'about us', 'about']],
+  ['tech', ['技术团队', 'technical', 'technology']],
+  ['quality', ['质量', 'quality', 'certification']],
+  ['factory', ['工厂', 'factory']],
+  ['facts', ['企业概况', 'company facts', 'facts']],
+  ['support', ['出口', 'support', 'service']]
+]
+function sectionRole(s) {
+  const text = Object.values(s?.title || {}).filter((v) => typeof v === 'string').join(' ').toLowerCase()
+  if (!text) return ''
+  for (const [role, words] of SECTION_MATCHERS) {
+    if (words.some((w) => text.includes(w))) return role
+  }
+  return ''
+}
+const profileBuckets = computed(() => {
+  const list = customSections.value
+  const assigned = new Map()
+  for (const [role] of SECTION_MATCHERS) {
+    const hit = list.find((s) => !assigned.has(s) && sectionRole(s) === role)
+    if (hit) assigned.set(hit, role)
+  }
+  // About slot: the matched section, else the first unassigned one,
+  // else simply the first section — the intro block never disappears.
+  let about = list.find((s) => assigned.get(s) === 'about') || null
+  if (!about) {
+    about = list.find((s) => !assigned.has(s)) || list[0] || null
+    if (about) assigned.set(about, 'about')
+  }
+  const get = (role) => list.find((s) => assigned.get(s) === role) || null
+  return {
+    about,
+    support: get('support'),
+    factory: get('factory'),
+    facts: get('facts'),
+    duo: [get('quality'), get('tech'), ...list.filter((s) => !assigned.has(s))].filter(Boolean)
+  }
+})
+const aboutSection = computed(() => profileBuckets.value.about)
+const supportSection = computed(() => profileBuckets.value.support)
+const factorySection = computed(() => profileBuckets.value.factory)
+const factsSection = computed(() => profileBuckets.value.facts)
+const duoSections = computed(() => profileBuckets.value.duo)
+
 // Testimonials / FAQs: entries that resolve to nothing in every
 // language are dropped; both blocks render only when non-empty.
 const profileTestimonials = computed(() => (siteConfig.profileContent?.testimonials || [])
@@ -333,22 +403,91 @@ const profileFaqs = computed(() => (siteConfig.profileContent?.faqs || [])
 function faqParas(f) {
   return String(tx(f?.a) || '').split(/\n+/).map((p) => p.trim()).filter(Boolean)
 }
-const profileHasCustom = computed(() => profileHeroImages.value.length > 0
-  || customSections.value.length > 0 || profileGallery.value.length > 0
-  || profileTestimonials.value.length > 0 || profileFaqs.value.length > 0)
-// Hero carousel: advance every 3s while the custom profile is on
-// screen; a single always-on interval with guards keeps it simple.
-const heroIdx = ref(0)
-watch(profileHeroImages, () => { heroIdx.value = 0 })
-let heroTimer = null
-onMounted(() => {
-  heroTimer = setInterval(() => {
-    if (view.value !== 'profile' || !profileHasCustom.value) return
-    const n = profileHeroImages.value.length
-    if (n > 1) heroIdx.value = (heroIdx.value + 1) % n
-  }, 3000)
-})
-onBeforeUnmount(() => { if (heroTimer) clearInterval(heroTimer) })
+const profileHasCustom = computed(() => customSections.value.length > 0 || profileGallery.value.length > 0
+  || profileTestimonials.value.length > 0 || profileFaqs.value.length > 0
+  || !!tx(profileBanner.value.title) || !!profileBanner.value.image)
+
+// ---- Profile showcase: live catalogue linkage ----
+// Category cards come from the real willis-* categories (card image =
+// first product photo found in that category; a category with no
+// photo anywhere is skipped), and the featured row is picked from the
+// WILLIS brand by the prototype's model keywords, then filled from
+// the rest of the brand pool. Loads lazily on the first profile
+// visit; with no such data both blocks simply stay hidden.
+// Prototype models for the featured row. Hardener / thinner are
+// generic words (they match 100+ products via blurbs), so those two
+// picks go straight to their dedicated willis categories instead of
+// a keyword search.
+const FEATURED_PICKS = [
+  { kw: 'W990' },
+  { kw: 'Hardener', categoryId: 'willis-hardener-curing-agent' },
+  { kw: 'thinner', categoryId: 'willis-thinner' },
+  { kw: '163A' },
+  { kw: 'W-L97A' },
+  { kw: 'W635' },
+  { kw: '201' },
+  { kw: '207' }
+]
+const willisCategories = computed(() => categories.value.filter((c) => String(c.id).startsWith('willis-')))
+const profileCatImages = ref({})
+const featuredProducts = ref([])
+let showcaseRequested = false
+function isWillisProduct(p) {
+  return String(p?.brandId || '') === 'willis' || /willis/i.test(String(p?.brand || ''))
+    || String(p?.categoryId || '').startsWith('willis-')
+}
+async function fillCategoryImages(cats) {
+  const missing = (cats || []).filter((c) => !profileCatImages.value[String(c.id)])
+  await Promise.all(missing.map(async (c) => {
+    const { items } = await fetchProducts({ categoryId: String(c.id) })
+    const hit = items.find((p) => p.image)
+    if (hit) profileCatImages.value = { ...profileCatImages.value, [String(c.id)]: hit.image }
+  }))
+}
+async function loadProfileShowcase() {
+  if (showcaseRequested) return
+  showcaseRequested = true
+  const { items: pool } = await fetchProducts({ brandId: 'willis' })
+  // One keyword search per prototype model; the backend matches
+  // keywords against every stored language of a name, so the model
+  // codes hit regardless of the visitor's UI language.
+  const hits = await Promise.all(FEATURED_PICKS.map(async (pick) => {
+    const { items } = pick.categoryId
+      ? await fetchProducts({ categoryId: pick.categoryId })
+      : await fetchProducts({ keyword: pick.kw })
+    const willis = items.filter(isWillisProduct)
+    // Prefer a name match: the backend also searches blurbs, so a
+    // keyword can hit products that merely mention it in their copy
+    // (every paint mentions "hardener"); the prototype models are the
+    // ones carrying the code in their name.
+    return willis.find((p) => String(p.name || '').toLowerCase().includes(pick.kw.toLowerCase())) || willis[0] || null
+  }))
+  const picked = []
+  const seen = new Set()
+  const pushUnique = (p) => { if (p && !seen.has(String(p.id))) { seen.add(String(p.id)); picked.push(p) } }
+  hits.forEach(pushUnique)
+  for (const p of pool) { if (picked.length >= 8) break; pushUnique(p) }
+  featuredProducts.value = picked.slice(0, 8)
+  // Category card images: brand pool + featured picks first, then a
+  // per-category fetch for whatever is still missing a photo.
+  const images = { ...profileCatImages.value }
+  for (const p of [...pool, ...picked]) {
+    const cid = String(p?.categoryId || '')
+    if (cid && p.image && !images[cid]) images[cid] = p.image
+  }
+  profileCatImages.value = images
+  await fillCategoryImages(willisCategories.value)
+}
+// Categories can land after the first profile visit (initial page
+// load); top up any card images that are still missing then.
+watch(willisCategories, (cats) => { if (view.value === 'profile') fillCategoryImages(cats) })
+const willisCategoryCards = computed(() => willisCategories.value
+  .map((c) => ({ ...c, image: profileCatImages.value[String(c.id)] || '' }))
+  .filter((c) => c.image))
+async function openProfileCategory(c) {
+  await pickCategory(String(c.id))
+  scrollToAnchor('catalogue')
+}
 // Recipe math for one colour number: share = dose / total dose of its
 // lines; grams and running cumulative follow the visitor's total grams.
 function recipeRows(lines) {
@@ -662,37 +801,85 @@ onMounted(async () => {
       </template>
     </main>
 
-    <!-- Company profile view: native page in the site's own theme —
-         a hero band in the homepage hero style, then the admin-authored
-         carousel / sections / gallery, then the contact card (same
-         .promo pattern as the homepage hero card). -->
+    <!-- Company profile view: native page in the site's own theme,
+         laid out after the approved prototype — full-width banner,
+         live willis category + featured-product blocks, the
+         admin-authored sections slotted by title (about split,
+         services features, quality/tech duo, factory gallery),
+         testimonials, FAQs, and a dark facts + contact band. -->
     <template v-else-if="view === 'profile' && profileHasCustom">
-      <section class="hero">
-        <div class="wrap hero-main">
-          <p class="hero-eyebrow">{{ siteConfig.heroEyebrow || meta.label }}</p>
-          <h1>{{ siteConfig.storyTitle || t('companyProfile') }}</h1>
-          <p v-if="siteConfig.storyText" class="hero-sub">{{ siteConfig.storyText }}</p>
+      <section class="profile-banner" :style="profileBanner.image ? { backgroundImage: `url(${profileBanner.image})` } : {}">
+        <div class="profile-banner-shade">
+          <div class="wrap profile-banner-in">
+            <h1>{{ bannerTitle }}</h1>
+            <p v-if="bannerSubtitle" class="profile-banner-sub">{{ bannerSubtitle }}</p>
+            <div class="profile-banner-btns">
+              <button type="button" class="btn btn-light" @click="scrollToAnchor('profile-categories')">{{ t('viewProducts') }}</button>
+              <button type="button" class="btn btn-banner-ghost" @click="scrollToAnchor('profile-contact')">{{ t('contactUs') }}</button>
+            </div>
+          </div>
         </div>
       </section>
       <main class="wrap profile-page">
-        <div v-if="profileHeroImages.length" class="profile-carousel">
-          <img :src="profileHeroImages[heroIdx]" :alt="t('companyProfile')" />
-          <div v-if="profileHeroImages.length > 1" class="profile-dots">
-            <button v-for="(img, i) in profileHeroImages" :key="i" type="button"
-              :class="{ active: i === heroIdx }" :aria-label="String(i + 1)" @click="heroIdx = i"></button>
+        <section v-if="willisCategoryCards.length" id="profile-categories" class="profile-block">
+          <h2 class="profile-block-title">{{ t('productCategories') }}</h2>
+          <div class="profile-cat-grid">
+            <button v-for="c in willisCategoryCards" :key="c.id" type="button" class="profile-cat-card" @click="openProfileCategory(c)">
+              <span class="profile-cat-media"><img :src="c.image" :alt="leafName(tx(c.name))" loading="lazy" @error="$event.target.remove()" /></span>
+              <span class="profile-cat-name">{{ leafName(tx(c.name)) }}</span>
+            </button>
           </div>
-        </div>
-        <section v-for="(s, i) in customSections" :key="i" class="profile-section">
-          <h2 v-if="tx(s.title)">{{ tx(s.title) }}</h2>
-          <img v-if="sectionImage(s)" class="profile-section-img" :src="sectionImage(s)" :alt="tx(s.title) || t('companyProfile')" loading="lazy" />
-          <p v-for="(para, j) in sectionParas(s)" :key="j">{{ para }}</p>
-          <ul v-if="sectionBullets(s).length">
-            <li v-for="(b, j) in sectionBullets(s)" :key="j">{{ b }}</li>
-          </ul>
         </section>
-        <div v-if="profileGallery.length" class="profile-gallery">
-          <img v-for="(img, i) in profileGallery" :key="i" :src="img" :alt="t('companyProfile')" loading="lazy" />
-        </div>
+        <section v-if="featuredProducts.length" class="profile-block">
+          <h2 class="profile-block-title">{{ t('ourProducts') }}</h2>
+          <div class="grid">
+            <ProductCard v-for="p in featuredProducts" :key="p.id" :product="p" :theme="theme"
+              @open="openProduct" @add="addToCart" @quote="requestQuote" />
+          </div>
+        </section>
+        <section v-if="aboutSection" class="profile-block profile-about" :class="{ 'no-img': !sectionImage(aboutSection) }">
+          <div class="profile-about-text">
+            <h2 v-if="tx(aboutSection.title)">{{ tx(aboutSection.title) }}</h2>
+            <p v-for="(para, j) in sectionParas(aboutSection)" :key="j">{{ para }}</p>
+            <ul v-if="sectionBullets(aboutSection).length">
+              <li v-for="(b, j) in sectionBullets(aboutSection)" :key="j">{{ b }}</li>
+            </ul>
+          </div>
+          <img v-if="sectionImage(aboutSection)" class="profile-about-img" :src="sectionImage(aboutSection)" :alt="tx(aboutSection.title) || t('companyProfile')" loading="lazy" />
+        </section>
+        <section v-if="supportSection" class="profile-block">
+          <h2 v-if="tx(supportSection.title)" class="profile-block-title">{{ tx(supportSection.title) }}</h2>
+          <p v-for="(para, j) in sectionParas(supportSection)" :key="j" class="profile-lead">{{ para }}</p>
+          <img v-if="sectionImage(supportSection)" class="profile-section-img" :src="sectionImage(supportSection)" :alt="tx(supportSection.title) || t('companyProfile')" loading="lazy" />
+          <div v-if="sectionBullets(supportSection).length" class="profile-features">
+            <div v-for="(b, j) in sectionBullets(supportSection)" :key="j" class="profile-feature">
+              <span class="profile-feature-ico" aria-hidden="true">{{ ['◎', '✦', '✓', '✚'][j % 4] }}</span>
+              <span>{{ b }}</span>
+            </div>
+          </div>
+        </section>
+        <section v-if="duoSections.length" class="profile-block profile-duo">
+          <div v-for="(s, i) in duoSections" :key="i" class="profile-duo-col">
+            <h2 v-if="tx(s.title)">{{ tx(s.title) }}</h2>
+            <img v-if="sectionImage(s)" class="profile-section-img" :src="sectionImage(s)" :alt="tx(s.title) || t('companyProfile')" loading="lazy" />
+            <p v-for="(para, j) in sectionParas(s)" :key="j">{{ para }}</p>
+            <ul v-if="sectionBullets(s).length">
+              <li v-for="(b, j) in sectionBullets(s)" :key="j">{{ b }}</li>
+            </ul>
+          </div>
+        </section>
+        <section v-if="factorySection || profileGallery.length" class="profile-block">
+          <h2 v-if="factorySection && tx(factorySection.title)" class="profile-block-title">{{ tx(factorySection.title) }}</h2>
+          <template v-if="factorySection">
+            <p v-for="(para, j) in sectionParas(factorySection)" :key="j" class="profile-lead">{{ para }}</p>
+            <ul v-if="sectionBullets(factorySection).length">
+              <li v-for="(b, j) in sectionBullets(factorySection)" :key="j">{{ b }}</li>
+            </ul>
+          </template>
+          <div v-if="profileGallery.length" class="profile-factory-grid">
+            <img v-for="(img, i) in profileGallery" :key="i" :src="img" :class="{ wide: i === 0 }" :alt="t('companyProfile')" loading="lazy" />
+          </div>
+        </section>
         <section v-if="profileTestimonials.length" class="profile-testimonials">
           <h2>{{ t('testimonials') }}</h2>
           <div class="testimonial-grid">
@@ -709,7 +896,15 @@ onMounted(async () => {
             <p v-for="(para, j) in faqParas(f)" :key="j">{{ para }}</p>
           </details>
         </section>
-        <div class="profile-promo">
+        <section id="profile-contact" class="profile-contact-band">
+          <div v-if="factsSection" class="profile-facts">
+            <h2 v-if="tx(factsSection.title)">{{ tx(factsSection.title) }}</h2>
+            <p v-for="(para, j) in sectionParas(factsSection)" :key="j" class="profile-facts-para">{{ para }}</p>
+            <div v-if="sectionBullets(factsSection).length" class="profile-facts-row">
+              <p v-for="(b, j) in sectionBullets(factsSection)" :key="j">{{ b }}</p>
+            </div>
+          </div>
+          <div class="profile-promo">
           <h3>{{ t('contact') }}</h3>
           <p>{{ t('contactText') }}</p>
           <p v-if="siteConfig.hotline" class="promo-tel">{{ t('exportHotline') }}<br /><b>{{ siteConfig.hotline }}</b></p>
@@ -723,7 +918,8 @@ onMounted(async () => {
             <span v-if="siteConfig.wechat">WeChat: <b>{{ siteConfig.wechat }}</b></span>
           </div>
           <button class="btn btn-light" @click="requestQuote(null)">{{ t('talkToSales') }}</button>
-        </div>
+          </div>
+        </section>
       </main>
     </template>
 

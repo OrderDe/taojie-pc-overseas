@@ -30,7 +30,7 @@ export const siteConfig = reactive({
   storyTitle: '', // brand story title (theme F section)
   storyText: '', // brand story body text
   profileUrl: 'https://williscarpaint.com/', // legacy: the profile page used to iframe this URL; kept only so old config files still parse — the storefront no longer reads it (profile is a native page now)
-  profileContent: { heroImages: [], sections: [], gallery: [], faqs: [], testimonials: [] }, // company profile content (native page): hero carousel URLs, sections [{ title/body: {lang: text} (body paragraphs split on blank lines), bullets: [{lang: text}], image }], gallery URLs, faqs [{ q/a: {lang: text} }], testimonials [{ name, text: {lang: text} }]
+  profileContent: { banner: { title: {}, subtitle: {}, image: '' }, heroImages: [], sections: [], gallery: [], faqs: [], testimonials: [] }, // company profile content (native page): banner { title/subtitle: {lang: text}, image } (hero carousel URLs kept for data compatibility — the current layout no longer renders them), sections [{ title/body: {lang: text} (body paragraphs split on blank lines), bullets: [{lang: text}], image }], gallery URLs, faqs [{ q/a: {lang: text} }], testimonials [{ name, text: {lang: text} }]
   // "Start Chat with" floating panel (SocialWidget): full profile URLs;
   // empty = that icon is hidden. wechat is an account ID (tap copies it).
   // whatsapp / email / hotline above are reused as panel icons too.
@@ -79,6 +79,13 @@ function mergeConfig(data) {
     if (k === 'profileContent') {
       if (data[k] && typeof data[k] === 'object' && !Array.isArray(data[k])) {
         siteConfig.profileContent = {
+          banner: (data[k].banner && typeof data[k].banner === 'object' && !Array.isArray(data[k].banner))
+            ? {
+                title: (data[k].banner.title && typeof data[k].banner.title === 'object') ? data[k].banner.title : {},
+                subtitle: (data[k].banner.subtitle && typeof data[k].banner.subtitle === 'object') ? data[k].banner.subtitle : {},
+                image: typeof data[k].banner.image === 'string' ? data[k].banner.image : ''
+              }
+            : { title: {}, subtitle: {}, image: '' },
           heroImages: Array.isArray(data[k].heroImages) ? data[k].heroImages : [],
           sections: Array.isArray(data[k].sections) ? data[k].sections : [],
           gallery: Array.isArray(data[k].gallery) ? data[k].gallery : [],

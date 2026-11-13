@@ -266,4 +266,55 @@ body { background: #f3f3f5; }
 .profile-contact p { margin: 6px 0; }
 .profile-social { display: flex; gap: 18px; flex-wrap: wrap; margin: 14px 0 24px; font-weight: 600; }
 .profile-social a { color: var(--brand); }
+/* Company profile, prototype layout: banner / category & featured
+   showcases / slotted sections / factory grid / facts + contact band.
+   Colours and radii all come from the theme variables, so the page
+   follows whichever of the eight themes the admin picked. */
+.profile-banner { background: var(--hero); background-size: cover; background-position: center; }
+.profile-banner-shade { background: linear-gradient(180deg, rgba(8, 10, 14, .38), rgba(8, 10, 14, .66)); }
+.profile-banner-in { padding-top: 86px; padding-bottom: 76px; color: #fff; }
+.profile-banner-in h1 { font-size: clamp(34px, 5.4vw, 58px); line-height: 1.12; margin: 0 0 14px; letter-spacing: .5px; }
+.profile-banner-sub { font-size: clamp(16px, 2vw, 21px); color: rgba(255, 255, 255, .88); margin: 0; max-width: 720px; line-height: 1.6; }
+.profile-banner-btns { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
+.btn-banner-ghost { background: transparent; color: #fff; border-color: rgba(255, 255, 255, .85); }
+.btn-banner-ghost:hover { border-color: #fff; }
+.profile-block { margin-bottom: 46px; }
+.profile-block-title { font-size: 28px; margin: 0 0 18px; }
+.profile-lead { font-size: 16.5px; line-height: 1.75; margin: 0 0 10px; max-width: 860px; }
+.profile-cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+.profile-cat-card { padding: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); overflow: hidden; cursor: pointer; box-shadow: var(--card-shadow); text-align: start; font: inherit; color: var(--ink); display: flex; flex-direction: column; }
+.profile-cat-card:hover { border-color: var(--brand); }
+.profile-cat-media img { display: block; width: 100%; height: 140px; object-fit: cover; }
+.profile-cat-name { display: block; padding: 12px 14px; font-weight: 700; font-size: 15.5px; }
+.profile-about { display: grid; grid-template-columns: 1.15fr .85fr; gap: 34px; align-items: start; }
+.profile-about.no-img { grid-template-columns: 1fr; max-width: 860px; }
+.profile-about-text h2 { font-size: 28px; margin: 0 0 14px; }
+.profile-about-text p { font-size: 16.5px; line-height: 1.75; margin: 0 0 10px; }
+.profile-about-text ul { margin: 6px 0 0; padding-inline-start: 22px; font-size: 16px; line-height: 1.8; }
+.profile-about-img { display: block; width: 100%; height: 100%; max-height: 440px; object-fit: cover; border-radius: var(--radius); box-shadow: var(--card-shadow); }
+.profile-features { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 20px; }
+.profile-feature { display: flex; gap: 12px; align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--card-shadow); padding: 16px 18px; font-weight: 600; font-size: 15.5px; line-height: 1.55; }
+.profile-feature-ico { color: var(--brand); font-size: 20px; line-height: 1.25; flex: none; }
+.profile-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; align-items: start; }
+.profile-duo-col h2 { font-size: 24px; margin: 0 0 12px; }
+.profile-duo-col p { font-size: 16px; line-height: 1.75; margin: 0 0 10px; }
+.profile-duo-col ul { margin: 6px 0 0; padding-inline-start: 22px; font-size: 15.5px; line-height: 1.8; }
+.profile-factory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+.profile-factory-grid img { display: block; width: 100%; height: 190px; object-fit: cover; border-radius: var(--radius); box-shadow: var(--card-shadow); }
+.profile-factory-grid img.wide { grid-column: span 2; }
+.profile-contact-band { background: var(--ink); color: #f2f2f5; border-radius: var(--radius); padding: 30px; display: grid; gap: 26px; margin-bottom: 12px; }
+.profile-facts h2 { color: #fff; font-size: 24px; margin: 0 0 14px; }
+.profile-facts-para { color: #d8d8de; font-size: 15.5px; line-height: 1.7; margin: 0 0 10px; }
+.profile-facts-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px 22px; }
+.profile-facts-row p { margin: 0; color: #d8d8de; font-size: 15.5px; line-height: 1.6; padding-inline-start: 12px; border-inline-start: 3px solid rgba(255, 255, 255, .35); }
+@media (max-width: 1020px) {
+  .profile-about, .profile-duo { grid-template-columns: 1fr; }
+  .profile-factory-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .profile-banner-in { padding-top: 56px; padding-bottom: 48px; }
+  .profile-factory-grid { grid-template-columns: 1fr; }
+  .profile-factory-grid img.wide { grid-column: span 1; }
+  .profile-contact-band { padding: 22px; }
+}
 @media (max-width: 720px) { .formula-table th:nth-child(6), .formula-table td:nth-child(6) { display: none; } }
