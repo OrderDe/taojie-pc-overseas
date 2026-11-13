@@ -308,3 +308,61 @@ export async function fetchFormulaDetail(id) {
     return { item: null, error: true }
   }
 }
+
+// ---- Custom pages (/api/pages/*) ----
+// Admin-authored standalone pages the nav can point at. The payload is
+// already multilingual ({lang: text} maps), so — unlike the catalogue —
+// nothing is language-resolved here; the view resolves via tx().
+// Demo fallback: with the backend unreachable, the bundled sample
+// "cases" page (same content the backend seeds) still renders, so the
+// feature is visible in demo mode; any other slug shows the not-found
+// state.
+const DEMO_CUSTOM_PAGES = {
+  cases: {
+    slug: 'cases',
+    titles: { zh: '客户案例', en: 'Cases' },
+    sections: [
+      {
+        title: { zh: '我们的工厂', en: 'Our Factory' },
+        body: { zh: '我们拥有专业的生产设备与经验丰富的生产团队。\n\n产品质量有保障，发货速度快！', en: 'WE HAVE PROFESSIONAL PRODUCTION EQUIPMENT AND EXPERIENCED MANUFACTURERS.\n\nTHE QUALITY OF THE PRODUCT IS GUARANTEED, AND THE SHIPMENT SPEED IS FAST!' },
+        image: 'https://youjia-oss.youjiakj.com/williscarpaint/Upload/20260524/1779626894357.jpg'
+      },
+      {
+        title: { zh: '仓储与发货', en: 'Warehousing & Shipping' },
+        body: { zh: '专业的生产设备与经验丰富的生产团队，产品质量有保障，发货速度快。', en: 'Professional production equipment and an experienced team — guaranteed product quality and fast shipment.' },
+        image: 'https://youjia-oss.youjiakj.com/williscarpaint/Upload/20260524/1779626894649.jpg'
+      }
+    ],
+    gallery: [
+      'https://youjia-oss.youjiakj.com/williscarpaint/Upload/20260524/1779626894497.jpg',
+      'https://youjia-oss.youjiakj.com/williscarpaint/Upload/20260524/1779626894850.jpg',
+      'https://youjia-oss.youjiakj.com/williscarpaint/Upload/20260524/1779626894947.jpg'
+    ]
+  }
+}
+
+function normalizeCustomPage(raw) {
+  if (!raw || typeof raw !== 'object') return null
+  const langMap = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : {})
+  return {
+    slug: String(raw.slug || ''),
+    titles: langMap(raw.titles),
+    sections: (Array.isArray(raw.sections) ? raw.sections : [])
+      .filter((s) => s && typeof s === 'object' && !Array.isArray(s))
+      .map((s) => ({ title: langMap(s.title), body: langMap(s.body), image: typeof s.image === 'string' ? s.image : '' })),
+    gallery: (Array.isArray(raw.gallery) ? raw.gallery : []).filter((u) => typeof u === 'string' && u)
+  }
+}
+
+export async function fetchCustomPage(slug) {
+  try {
+    const data = await getJson(`pages/${encodeURIComponent(slug)}`, {}, 9000)
+    const item = normalizeCustomPage(data)
+    if (!item || !item.slug) return { item: null, demo: false, error: true }
+    return { item, demo: false, error: false }
+  } catch {
+    const demo = DEMO_CUSTOM_PAGES[slug]
+    if (demo) return { item: normalizeCustomPage(demo), demo: true, error: false }
+    return { item: null, demo: false, error: true }
+  }
+}

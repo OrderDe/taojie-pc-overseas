@@ -6,7 +6,7 @@ import CartDrawer from './components/CartDrawer.vue'
 import RfqPanel from './components/RfqPanel.vue'
 import ChatWidget from './components/ChatWidget.vue'
 import SocialWidget from './components/SocialWidget.vue'
-import { fetchCategories, fetchKeywords, fetchProducts, fetchProductDetail, fetchBrands, demoBrands, fetchFormulaBrands, fetchFormulaModels, fetchFormulaSearch, fetchFormulaDetail } from './api.js'
+import { fetchCategories, fetchKeywords, fetchProducts, fetchProductDetail, fetchBrands, demoBrands, fetchFormulaBrands, fetchFormulaModels, fetchFormulaSearch, fetchFormulaDetail, fetchCustomPage } from './api.js'
 import { siteConfig } from './siteConfig.js'
 import { LANGS, locale, setLocale, t, tx, themeText } from './i18n.js'
 import { CURRENCIES, displayCode, baseCode, isConverted, formatPrice, initFx, setDisplay, currencyForLocale } from './utils/currency.js'
@@ -28,7 +28,7 @@ const theme = computed(() => {
   return THEMES[key] ? key : 'h'
 })
 
-const view = ref('home') // 'home' | 'detail' | 'formula' | 'profile'
+const view = ref('home') // 'home' | 'detail' | 'formula' | 'profile' | 'page'
 const categories = ref([])
 const products = ref([])
 const keywords = ref([])
@@ -112,9 +112,10 @@ const zones = computed(() => navigationItems(siteConfig,t))
 // #… → anchor, anything else (or empty) → no action, as before.
 function navType(item) {
   const type = String(item.type || '')
-  if (type === 'category' || type === 'anchor' || type === 'external') return type
+  if (type === 'category' || type === 'anchor' || type === 'external' || type === 'page') return type
   const link = String(item.link || '')
   if (/^https?:\/\//i.test(link)) return 'external'
+  if (link.startsWith('#page/')) return 'page'
   if (link.startsWith('#')) return 'anchor'
   return ''
 }
@@ -127,6 +128,11 @@ function scrollToAnchor(id) {
 async function onNav(item) {
   trackClick(`导航:${item.label}`)
   const type = navType(item)
+  if (type === 'page') {
+    const slug = pageSlugFromLink(item.link) || pageSlugFromLink(item.pageSlug)
+    if (slug) { openCustomPage(slug); return }
+  }
+  clearPageHash()
   if (type === 'category') {
     await pickCategory(String(item.categoryId || ''))
     scrollToAnchor('catalogue')
@@ -306,6 +312,52 @@ function openProfile() {
   window.scrollTo({ top: 0 })
   loadProfileShowcase()
 }
+// ---- Custom pages (admin-authored standalone pages) ----
+// A nav item of type 'page' carries its target as link '#page/<slug>';
+// the view also opens on a matching location.hash, so shared links and
+// refreshes land on the page. Content comes from /api/pages/:slug; a
+// hidden or unknown slug (or an unreachable backend without a bundled
+// sample) lands on the pageNotFound empty state.
+const PAGE_SLUG_RE = /^[a-z0-9][a-z0-9-]{1,60}$/
+function pageSlugFromLink(link) {
+  const raw = String(link || '').trim()
+  const slug = raw.startsWith('#page/') ? raw.slice(6) : raw.startsWith('page/') ? raw.slice(5) : raw
+  return PAGE_SLUG_RE.test(slug) ? slug : ''
+}
+function pageSlugFromHash(hash) {
+  const raw = String(hash || '')
+  return raw.startsWith('#page/') ? pageSlugFromLink(raw) : ''
+}
+function clearPageHash() {
+  if (pageSlugFromHash(window.location.hash)) {
+    history.replaceState(null, '', window.location.pathname + window.location.search)
+  }
+}
+const customPage = ref(null)
+const customPageSlug = ref('')
+const customPageLoading = ref(false)
+let customPageRequest = 0
+async function openCustomPage(slug) {
+  if (!PAGE_SLUG_RE.test(String(slug || ''))) return
+  const targetHash = `#page/${slug}`
+  if (window.location.hash !== targetHash) history.replaceState(null, '', targetHash)
+  view.value = 'page'
+  customPageSlug.value = slug
+  customPage.value = null
+  customPageLoading.value = true
+  currentPageLabel.value = `page:${slug}`; trackView(currentPageLabel.value)
+  window.scrollTo({ top: 0 })
+  const request = ++customPageRequest
+  const { item, demo } = await fetchCustomPage(slug)
+  if (request !== customPageRequest) return
+  noteDemo(demo)
+  customPage.value = item
+  customPageLoading.value = false
+}
+// Sections that resolve to nothing in every language (and carry no
+// image) are dropped, same rule as the profile page sections.
+const customPageSections = computed(() => (customPage.value?.sections || [])
+  .filter((s) => s && (tx(s.title) || sectionParas(s).length || sectionImage(s))))
 // ---- Company profile (native page, prototype layout) ----
 // profileContent is shape-guarded by the backend and normalised by
 // mergeConfig; the filters here only drop unusable entries. Sections
@@ -564,6 +616,14 @@ onMounted(async () => {
   trackView('home')
   await refreshCatalogue()
   if (!demoMode.value) initFx(siteConfig.baseCurrency, locale.value)
+  // Direct link / refresh on a custom page: #page/<slug> opens that
+  // page, and later hash edits to a page link do the same.
+  const initialSlug = pageSlugFromHash(window.location.hash)
+  if (initialSlug) openCustomPage(initialSlug)
+  window.addEventListener('hashchange', () => {
+    const slug = pageSlugFromHash(window.location.hash)
+    if (slug && slug !== customPageSlug.value) openCustomPage(slug)
+  })
 })
 </script>
 
@@ -945,6 +1005,43 @@ onMounted(async () => {
       </div>
       <button class="btn btn-primary" @click="requestQuote(null)">{{ t('talkToSales') }}</button>
     </main>
+
+    <!-- Custom page view (admin-authored standalone page): hero band
+         with the page title, its sections and gallery, then the same
+         contact card that closes the company-profile page. -->
+    <template v-else-if="view === 'page'">
+      <template v-if="customPage">
+        <section class="page-band">
+          <div class="wrap page-band-in">
+            <h1>{{ tx(customPage.titles) }}</h1>
+          </div>
+        </section>
+        <main class="wrap profile-page">
+          <section v-for="(s, i) in customPageSections" :key="i" class="profile-block">
+            <h2 v-if="tx(s.title)" class="profile-block-title">{{ tx(s.title) }}</h2>
+            <img v-if="sectionImage(s)" class="profile-section-img" :src="sectionImage(s)" :alt="tx(s.title)" loading="lazy" />
+            <p v-for="(para, j) in sectionParas(s)" :key="j">{{ para }}</p>
+          </section>
+          <div v-if="customPage.gallery.length" class="profile-factory-grid">
+            <img v-for="(img, i) in customPage.gallery" :key="i" :src="img" :class="{ wide: i === 0 }" :alt="tx(customPage.titles)" loading="lazy" />
+          </div>
+          <section class="profile-contact-band">
+            <div class="profile-promo">
+              <h3>{{ t('contact') }}</h3>
+              <p>{{ t('contactText') }}</p>
+              <p v-if="siteConfig.hotline" class="promo-tel">{{ t('exportHotline') }}<br /><b>{{ siteConfig.hotline }}</b></p>
+              <p v-if="siteConfig.whatsapp" class="promo-tel">{{ t('whatsappLabel') }}<br /><b>{{ siteConfig.whatsapp }}</b></p>
+              <p v-if="siteConfig.email" class="promo-tel">{{ t('emailLabel') }}<br /><b>{{ siteConfig.email }}</b></p>
+              <button class="btn btn-light" @click="requestQuote(null)">{{ t('talkToSales') }}</button>
+            </div>
+          </section>
+        </main>
+      </template>
+      <main v-else class="wrap profile-page">
+        <p v-if="customPageLoading" class="empty">{{ t('loading') }}</p>
+        <div v-else class="empty">{{ t('pageNotFound') }}</div>
+      </main>
+    </template>
 
     <footer class="footer">
       <div class="wrap footer-in">

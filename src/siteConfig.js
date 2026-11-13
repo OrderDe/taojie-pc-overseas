@@ -53,7 +53,7 @@ function mergeConfig(data) {
           .map((i) => {
             const item = { label: String(i.label || ''), link: String(i.link || ''), enabled: i.enabled !== false, labelKey: String(i.labelKey || '') }
             const type = String(i.type || '')
-            if (type === 'category' || type === 'anchor' || type === 'external') item.type = type
+            if (type === 'category' || type === 'anchor' || type === 'external' || type === 'page') item.type = type
             if (i.categoryId !== undefined && i.categoryId !== null && String(i.categoryId) !== '') {
               item.categoryId = String(i.categoryId)
             }
