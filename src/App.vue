@@ -1,6 +1,6 @@
 <script setup>
 import { navigationItems } from './utils/navigation'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import ProductCard from './components/ProductCard.vue'
 import CartDrawer from './components/CartDrawer.vue'
 import RfqPanel from './components/RfqPanel.vue'
@@ -305,6 +305,37 @@ function openProfile() {
   currentPageLabel.value = 'profile'; trackView('profile')
   window.scrollTo({ top: 0 })
 }
+// ---- Company profile (native page) ----
+// profileContent is shape-guarded by the backend and normalised by
+// mergeConfig; the filters here only drop unusable entries. Sections
+// that resolve to nothing in every language are skipped entirely.
+// When no custom content exists at all, the profile view falls back
+// to the storyTitle/storyText text version.
+const profileHeroImages = computed(() => (siteConfig.profileContent?.heroImages || []).filter((u) => typeof u === 'string' && u))
+const profileGallery = computed(() => (siteConfig.profileContent?.gallery || []).filter((u) => typeof u === 'string' && u))
+function sectionParas(s) {
+  return String(tx(s?.body) || '').split(/\n+/).map((p) => p.trim()).filter(Boolean)
+}
+function sectionBullets(s) {
+  return (s?.bullets || []).map((b) => tx(b)).filter(Boolean)
+}
+const customSections = computed(() => (siteConfig.profileContent?.sections || [])
+  .filter((s) => s && (tx(s.title) || sectionParas(s).length || sectionBullets(s).length)))
+const profileHasCustom = computed(() => profileHeroImages.value.length > 0
+  || customSections.value.length > 0 || profileGallery.value.length > 0)
+// Hero carousel: advance every 3s while the custom profile is on
+// screen; a single always-on interval with guards keeps it simple.
+const heroIdx = ref(0)
+watch(profileHeroImages, () => { heroIdx.value = 0 })
+let heroTimer = null
+onMounted(() => {
+  heroTimer = setInterval(() => {
+    if (view.value !== 'profile' || !profileHasCustom.value) return
+    const n = profileHeroImages.value.length
+    if (n > 1) heroIdx.value = (heroIdx.value + 1) % n
+  }, 3000)
+})
+onBeforeUnmount(() => { if (heroTimer) clearInterval(heroTimer) })
 // Recipe math for one colour number: share = dose / total dose of its
 // lines; grams and running cumulative follow the visitor's total grams.
 function recipeRows(lines) {
@@ -618,14 +649,55 @@ onMounted(async () => {
       </template>
     </main>
 
-    <!-- Company profile view: full-page embed when an embed URL is
-         configured (mirrors the original site, whose profile page is a
-         borderless iframe of the company homepage). -->
-    <main v-else-if="view === 'profile' && siteConfig.profileUrl" class="profile-embed-page">
-      <iframe class="profile-embed" :src="siteConfig.profileUrl" :title="t('companyProfile')" frameborder="0"></iframe>
-    </main>
+    <!-- Company profile view: native page in the site's own theme —
+         a hero band in the homepage hero style, then the admin-authored
+         carousel / sections / gallery, then the contact card (same
+         .promo pattern as the homepage hero card). -->
+    <template v-else-if="view === 'profile' && profileHasCustom">
+      <section class="hero">
+        <div class="wrap hero-main">
+          <p class="hero-eyebrow">{{ siteConfig.heroEyebrow || meta.label }}</p>
+          <h1>{{ siteConfig.storyTitle || t('companyProfile') }}</h1>
+          <p v-if="siteConfig.storyText" class="hero-sub">{{ siteConfig.storyText }}</p>
+        </div>
+      </section>
+      <main class="wrap profile-page">
+        <div v-if="profileHeroImages.length" class="profile-carousel">
+          <img :src="profileHeroImages[heroIdx]" :alt="t('companyProfile')" />
+          <div v-if="profileHeroImages.length > 1" class="profile-dots">
+            <button v-for="(img, i) in profileHeroImages" :key="i" type="button"
+              :class="{ active: i === heroIdx }" :aria-label="String(i + 1)" @click="heroIdx = i"></button>
+          </div>
+        </div>
+        <section v-for="(s, i) in customSections" :key="i" class="profile-section">
+          <h2 v-if="tx(s.title)">{{ tx(s.title) }}</h2>
+          <p v-for="(para, j) in sectionParas(s)" :key="j">{{ para }}</p>
+          <ul v-if="sectionBullets(s).length">
+            <li v-for="(b, j) in sectionBullets(s)" :key="j">{{ b }}</li>
+          </ul>
+        </section>
+        <div v-if="profileGallery.length" class="profile-gallery">
+          <img v-for="(img, i) in profileGallery" :key="i" :src="img" :alt="t('companyProfile')" loading="lazy" />
+        </div>
+        <div class="profile-promo">
+          <h3>{{ t('contact') }}</h3>
+          <p>{{ t('contactText') }}</p>
+          <p v-if="siteConfig.hotline" class="promo-tel">{{ t('exportHotline') }}<br /><b>{{ siteConfig.hotline }}</b></p>
+          <p v-if="siteConfig.whatsapp" class="promo-tel">{{ t('whatsappLabel') }}<br /><b>{{ siteConfig.whatsapp }}</b></p>
+          <p v-if="siteConfig.email" class="promo-tel">{{ t('emailLabel') }}<br /><b>{{ siteConfig.email }}</b></p>
+          <div v-if="siteConfig.tiktok || siteConfig.instagram || siteConfig.facebook || siteConfig.youtube || siteConfig.wechat" class="profile-social">
+            <a v-if="siteConfig.tiktok" :href="siteConfig.tiktok" target="_blank" rel="noopener">TikTok</a>
+            <a v-if="siteConfig.instagram" :href="siteConfig.instagram" target="_blank" rel="noopener">Instagram</a>
+            <a v-if="siteConfig.facebook" :href="siteConfig.facebook" target="_blank" rel="noopener">Facebook</a>
+            <a v-if="siteConfig.youtube" :href="siteConfig.youtube" target="_blank" rel="noopener">YouTube</a>
+            <span v-if="siteConfig.wechat">WeChat: <b>{{ siteConfig.wechat }}</b></span>
+          </div>
+          <button class="btn btn-light" @click="requestQuote(null)">{{ t('talkToSales') }}</button>
+        </div>
+      </main>
+    </template>
 
-    <!-- Company profile view, text fallback (embed URL cleared in admin) -->
+    <!-- Company profile view, text fallback (no custom content yet) -->
     <main v-else-if="view === 'profile'" class="wrap profile-page">
       <div class="profile-head">
         <img v-if="siteConfig.logo" class="profile-logo" :src="siteConfig.logo" alt="TAOJIE" />

@@ -29,7 +29,8 @@ export const siteConfig = reactive({
   hotline: '', // export hotline phone shown on the dealer card
   storyTitle: '', // brand story title (theme F section)
   storyText: '', // brand story body text
-  profileUrl: 'https://williscarpaint.com/', // company profile page: embedded full-page in an iframe when set; empty = text version (storyTitle/storyText)
+  profileUrl: 'https://williscarpaint.com/', // legacy: the profile page used to iframe this URL; kept only so old config files still parse — the storefront no longer reads it (profile is a native page now)
+  profileContent: { heroImages: [], sections: [], gallery: [] }, // company profile content (native page): hero carousel URLs, sections [{ title/body: {lang: text}, bullets: [{lang: text}] }], gallery URLs
   // "Start Chat with" floating panel (SocialWidget): full profile URLs;
   // empty = that icon is hidden. wechat is an account ID (tap copies it).
   // whatsapp / email / hotline above are reused as panel icons too.
@@ -68,6 +69,21 @@ function mergeConfig(data) {
     // sent at all) keeps the default.
     if (k === 'profileUrl') {
       if (typeof data[k] === 'string') siteConfig.profileUrl = data[k]
+      continue
+    }
+    // profileContent is an object: any object the backend sends wins,
+    // including an emptied one (the admin may deliberately clear the
+    // custom profile content); only a missing/non-object value keeps
+    // the default. Sub-arrays are normalised so the profile view can
+    // rely on their presence.
+    if (k === 'profileContent') {
+      if (data[k] && typeof data[k] === 'object' && !Array.isArray(data[k])) {
+        siteConfig.profileContent = {
+          heroImages: Array.isArray(data[k].heroImages) ? data[k].heroImages : [],
+          sections: Array.isArray(data[k].sections) ? data[k].sections : [],
+          gallery: Array.isArray(data[k].gallery) ? data[k].gallery : []
+        }
+      }
       continue
     }
     if (data[k] === undefined || data[k] === null || data[k] === '') continue

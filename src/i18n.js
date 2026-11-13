@@ -3,6 +3,8 @@
 // - tx(str): free-form demo strings (product names, categories, units, tags,
 //   blurbs, spec keys/values) translated via STRINGS, keyed by the English
 //   source text; unknown strings (e.g. live API data) pass through unchanged.
+//   tx also accepts a multi-language map ({lang: text}) and resolves it
+//   locale → en → first value before the same dictionary lookup.
 // - The visitor's choice persists in localStorage; the admin default comes
 //   from pc-config.json (siteConfig.defaultLanguage).
 import { ref } from 'vue'
@@ -67,6 +69,15 @@ export function t(key, vars) {
 }
 
 export function tx(str) {
+  // Multi-language maps ({ zh: '…', en: '…', … } — the shape the admin
+  // stores names and company-profile content in) resolve through the
+  // same fallback chain the API's pickLang uses: the current locale,
+  // then English, then the first available value. The resolved string
+  // then goes through the usual dictionary lookup below.
+  if (str && typeof str === 'object') {
+    const v = str[locale.value] || str.en || Object.values(str).find((x) => typeof x === 'string' && x)
+    str = typeof v === 'string' ? v : ''
+  }
   if (typeof str !== 'string' || !str) return str
   const dict = STRINGS[locale.value]
   return (dict && dict[str]) || str
