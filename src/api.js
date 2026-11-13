@@ -8,7 +8,6 @@
 // shape falls back to the bundled sample data, and the caller learns via
 // `meta.demo === true` that demo mode is active.
 
-import { sampleCategories, sampleProducts, sampleKeywords, sampleBrands } from './data/sample.js'
 import { locale } from './i18n.js'
 
 export const API_BASE = (import.meta.env.VITE_API_BASE || '/api').replace(/\/$/, '')
@@ -29,6 +28,7 @@ async function getJson(path, params = {}) {
     const body = await res.json()
     // CRMEB wraps payloads as { status, msg, data }
     if (body && typeof body === 'object' && 'data' in body) {
+      if (body.code !== undefined && body.code !== 200) throw new Error(body.message || 'API error')
       if (body.status && body.status !== 200 && body.status !== 'success') throw new Error(body.msg || 'API error')
       return body.data
     }
@@ -101,16 +101,18 @@ export async function fetchCategories() {
         flat.push({
           id: String(pick(n, ['id', 'value'], flat.length + 1)),
           name: String(pick(n, ['name', 'label', 'title'], 'Category')),
+          parentId: String(n.parentId || ''),
+          level: Number(n.level || 1),
+          pathName: String(n.pathName || n.name || ''),
           count: Number(pick(n, ['count', 'productCount'], 0)) || 0
         })
         walk(n.child || n.children || n.list)
       })
     }
     walk(Array.isArray(data) ? data : listFrom(data))
-    if (!flat.length) throw new Error('empty categories')
-    return { items: flat.slice(0, 12), demo: false }
+    return { items: flat.filter(category => category.count > 0), demo: false }
   } catch {
-    return { items: sampleCategories, demo: true }
+    return { items: [], demo: false, error: true }
   }
 }
 
@@ -118,21 +120,10 @@ export async function fetchProducts({ keyword = '', categoryId = '', brandId = '
   try {
     const data = await getJson('products', { keyword, categoryId, brandId, page: 1, limit: 48, lang: locale.value })
     const items = listFrom(data).map(normalizeProduct).filter(Boolean)
-    if (items.length) return { items, demo: false }
-    // A filtered query (keyword / category / brand) that matches nothing is
-    // a genuine empty result — show the empty state, not the demo catalogue.
-    // Only an unfiltered empty response still falls back to demo data.
-    if (keyword || categoryId || brandId) return { items: [], demo: false }
-    throw new Error('empty products')
-  } catch { /* fall through to demo data */ }
-  let items = sampleProducts
-  if (categoryId) items = items.filter((p) => p.categoryId === categoryId)
-  if (brandId) items = items.filter((p) => String(p.brandId || '') === String(brandId))
-  if (keyword) {
-    const q = keyword.toLowerCase()
-    items = items.filter((p) => (p.name + ' ' + p.category).toLowerCase().includes(q))
+    return { items, demo: false }
+  } catch {
+    return { items: [], demo: false, error: true }
   }
-  return { items, demo: true }
 }
 
 export async function fetchProductDetail(id) {
@@ -143,8 +134,7 @@ export async function fetchProductDetail(id) {
     if (normalized && normalized.name !== 'Untitled product') return { item: normalized, demo: false }
     throw new Error('unexpected detail payload')
   } catch {
-    const item = sampleProducts.find((p) => String(p.id) === String(id)) || sampleProducts[0]
-    return { item, demo: true }
+    return { item: null, demo: false, error: true }
   }
 }
 
@@ -152,10 +142,9 @@ export async function fetchKeywords() {
   try {
     const data = await getJson('keywords', { lang: locale.value })
     const items = listFrom(data).map((k) => String(typeof k === 'string' ? k : pick(k, ['title', 'name', 'keyword'], ''))).filter(Boolean)
-    if (items.length) return { items: items.slice(0, 8), demo: false }
-    throw new Error('empty keywords')
+    return { items: items.slice(0, 8), demo: false }
   } catch {
-    return { items: sampleKeywords, demo: true }
+    return { items: [], demo: false, error: true }
   }
 }
 
@@ -249,19 +238,18 @@ export async function chatPull(token, afterId = 0) {
 // Brand list from the backend's public brands endpoint, as [{id, name}]
 // so the chips can filter by brandId; falls back to the bundled sample
 // list (same shape) when the backend is unreachable or has none.
-export async function fetchBrands() {
+export async function fetchBrands({ categoryId = '' } = {}) {
   try {
-    const data = await getJson('brands', { lang: locale.value })
+    const data = await getJson('brands', { lang: locale.value, categoryId })
     const items = listFrom(data)
       .map((b) => (typeof b === 'string'
         ? { id: '', name: b }
         : { id: String(pick(b, ['id', 'value'], '')), name: String(pick(b, ['name', 'label', 'title'], '')) }))
       .filter((b) => b.name && b.id)
-    if (items.length) return { items, demo: false }
-    throw new Error('empty brands')
+    return { items, demo: false }
   } catch {
-    return { items: sampleBrands, demo: true }
+    return { items: [], demo: false, error: true }
   }
 }
 
-export function demoBrands() { return sampleBrands }
+export function demoBrands() { return [] }

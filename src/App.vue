@@ -37,6 +37,26 @@ const searchedQuery = ref('')
 const activeCategory = ref('')
 const activeBrand = ref('')
 const selected = ref(null)
+const expandedCategoryIds = computed(() => {
+  const ids = new Set()
+  let id = activeCategory.value
+  while (id && !ids.has(id)) {
+    ids.add(id)
+    id = categories.value.find(c => String(c.id) === id)?.parentId || ''
+  }
+  return ids
+})
+const navigationCategories = computed(() => {
+  const result = []
+  const walk = (parentId) => {
+    for (const c of categories.value.filter(row => String(row.parentId || '') === parentId)) {
+      result.push({ ...c, hasChildren: categories.value.some(row => String(row.parentId || '') === String(c.id)) })
+      if (expandedCategoryIds.value.has(String(c.id))) walk(String(c.id))
+    }
+  }
+  walk('')
+  return result
+})
 const cart = ref([])
 const cartOpen = ref(false)
 const rfqProduct = ref('')
@@ -119,7 +139,7 @@ const resultsTitle = computed(() => {
   if (searchedQuery.value) return t('searchResults', { q: searchedQuery.value })
   if (activeCategory.value) {
     const c = categories.value.find((x) => String(x.id) === activeCategory.value)
-    return c ? leafName(tx(c.name)) : t('categoryTitle')
+    return c ? tx(c.name) : t('categoryTitle')
   }
   return t('featured')
 })
@@ -127,21 +147,42 @@ const resultsTitle = computed(() => {
 function noteDemo(d) { if (d) demoMode.value = true }
 function showToast(msg) { toast.value = msg; setTimeout(() => { toast.value = '' }, 2200) }
 
+let productsRequest = 0
 async function loadProducts() {
+  const request = ++productsRequest
   loading.value = true
-  const { items, demo } = await fetchProducts({ keyword: query.value, categoryId: activeCategory.value, brandId: activeBrand.value })
+  const { items, demo, error } = await fetchProducts({ keyword: query.value, categoryId: activeCategory.value, brandId: activeBrand.value })
+  if (request !== productsRequest) return
+  if (error) showToast('商品加载失败，请稍后重试')
   products.value = items
   noteDemo(demo)
   loading.value = false
 }
 
+async function loadBrands() {
+  const categoryId = activeCategory.value
+  const lang = locale.value
+  const { items } = await fetchBrands({ categoryId })
+  if (categoryId !== activeCategory.value || lang !== locale.value) return
+  brands.value = items
+  if (!items.some((b) => String(b.id) === activeBrand.value)) activeBrand.value = ''
+}
+
 async function onSearch() { view.value = 'home'; searchedQuery.value = query.value.trim(); activeBrand.value = ''; await loadProducts() }
-async function pickCategory(id) { activeCategory.value = id; searchedQuery.value = ''; activeBrand.value = ''; view.value = 'home'; await loadProducts() }
+async function pickCategory(id) {
+  activeCategory.value = id
+  query.value = ''
+  searchedQuery.value = ''
+  activeBrand.value = ''
+  view.value = 'home'
+  await Promise.all([loadProducts(), loadBrands()])
+}
 // Brand chip toggle: clicking the selected brand (or the "all" chip) clears it.
 async function pickBrand(id) { activeBrand.value = activeBrand.value === id ? '' : id; await loadProducts() }
 
 async function openProduct(p) {
   const { item, demo } = await fetchProductDetail(p.id)
+  if (!item) { showToast('商品详情加载失败，请稍后重试'); return }
   selected.value = { ...p, ...item, specs: { ...(p.specs || {}), ...(item.specs || {}) } }
   noteDemo(demo)
   view.value = 'detail'
@@ -161,16 +202,25 @@ function requestQuote(p) {
   setTimeout(() => document.getElementById('rfq')?.scrollIntoView({ behavior: 'smooth' }), 60)
 }
 
-onMounted(async () => {
-  const [cats, kws, brs] = await Promise.all([fetchCategories(), fetchKeywords(), fetchBrands()])
+async function refreshCatalogue() {
+  const lang = locale.value
+  ++productsRequest
+  loading.value = true
+  const [cats, kws] = await Promise.all([fetchCategories(), fetchKeywords(), loadBrands()])
+  if (lang !== locale.value) return
   categories.value = cats.items
   keywords.value = kws.items
-  brands.value = brs.items
   noteDemo(cats.demo || kws.demo)
   await loadProducts()
-  // Real shop: load FX rates for the configured base currency so the
-  // top-bar currency switcher can convert prices. Demo mode never
-  // fetches rates — its prices keep the built-in "$" rendering.
+  if (view.value === 'detail' && selected.value) {
+    const id = selected.value.id
+    const { item } = await fetchProductDetail(id)
+    if (lang === locale.value && selected.value?.id === id && item) selected.value = item
+  }
+}
+watch(locale, refreshCatalogue)
+onMounted(async () => {
+  await refreshCatalogue()
   if (!demoMode.value) initFx(siteConfig.baseCurrency, locale.value)
 })
 </script>
@@ -241,8 +291,10 @@ onMounted(async () => {
           <aside class="rail">
             <h2>{{ t('allCategories') }}</h2>
             <button :class="{ active: !activeCategory }" @click="pickCategory('')">{{ t('allProducts') }}</button>
-            <button v-for="c in categories" :key="c.id" :class="{ active: activeCategory === String(c.id) }" :title="tx(c.name)" @click="pickCategory(String(c.id))">
-              {{ leafName(tx(c.name)) }} <span v-if="c.count">›</span>
+            <button v-for="c in navigationCategories" :key="c.id" :class="{ active: activeCategory === String(c.id) }"
+              :style="{ paddingLeft: (12 + (c.level - 1) * 14) + 'px' }" :title="c.pathName"
+              :aria-expanded="c.hasChildren ? expandedCategoryIds.has(String(c.id)) : undefined" @click="pickCategory(String(c.id))">
+              {{ tx(c.name) }} <span v-if="c.hasChildren">{{ expandedCategoryIds.has(String(c.id)) ? '⌄' : '›' }}</span>
             </button>
           </aside>
 

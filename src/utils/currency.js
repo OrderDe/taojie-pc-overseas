@@ -67,12 +67,12 @@ export function setDisplay(code) {
 }
 
 // Load the rate table for the site's base currency. First-visit display
-// default: Chinese UI → CNY, anything else → USD; a saved choice wins.
+// default is the stored-price base currency; a saved choice wins.
 // Failures are silent by design (see header comment).
 export async function initFx(base, uiLocale) {
   const b = String(base || '').toUpperCase()
   baseCode.value = META[b] ? b : 'CNY'
-  if (!savedChoice) displayCode.value = uiLocale === 'zh' ? 'CNY' : 'USD'
+  if (!savedChoice) displayCode.value = baseCode.value
   try {
     const res = await fetch(`${API_BASE}/fx/rates?base=${baseCode.value}`, {
       headers: { Accept: 'application/json' }
