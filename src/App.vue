@@ -163,6 +163,51 @@ async function onNav(item) {
   }
 }
 
+// ---- Footer (admin-configured; built-in copy as fallback) ----
+// Blurb / note / copyright and the link columns come from the site
+// config's footer fields; anything unset falls back to the copy that
+// used to be hardcoded in the template, so the footer is never blank.
+const footerBlurbText = computed(() => tx(siteConfig.footerBlurb) || t('footerAbout'))
+const footerNoteText = computed(() => tx(siteConfig.footerNote) || t('noteText'))
+const footerCopyrightText = computed(() => {
+  const raw = tx(siteConfig.footerCopyright)
+  return raw ? raw.split('{year}').join(String(new Date().getFullYear())) : t('copyright', { theme: meta.value.label })
+})
+// A category link saved without a categoryId (the seeded defaults) is
+// matched by any of its labels against the live category names (full
+// path or leaf segment); no match = plain text.
+function matchFooterCategory(labels) {
+  const wanted = Object.values(labels || {}).map((v) => String(v || '').trim()).filter(Boolean)
+  if (!wanted.length) return ''
+  for (const c of categories.value) {
+    const name = tx(c.name)
+    if (wanted.includes(name) || wanted.includes(leafName(name))) return String(c.id)
+  }
+  return ''
+}
+// Build the nav-shaped dispatch item for a footer link, or null when
+// the link is text-only (type '' or an unresolvable target).
+function footerNavItem(link) {
+  const type = String(link.type || '')
+  const label = tx(link.labels)
+  if (type === 'category') {
+    const id = String(link.categoryId || '') || matchFooterCategory(link.labels)
+    return id ? { label, type: 'category', categoryId: id } : null
+  }
+  if (type === 'anchor' && link.link) return { label, type: 'anchor', link: String(link.link) }
+  if (type === 'page' && link.link) return { label, type: 'page', link: String(link.link) }
+  if (type === 'external' && link.link) return { label, type: 'external', link: String(link.link) }
+  return null
+}
+const footerCols = computed(() => (siteConfig.footerColumns || [])
+  .map((c) => ({
+    title: tx(c.title),
+    links: (c.links || [])
+      .map((l) => ({ label: tx(l.labels), item: footerNavItem(l) }))
+      .filter((l) => l.label)
+  }))
+  .filter((c) => c.title || c.links.length))
+
 // Real category names are full paths ("汽车油漆 / 1K银粉色母系列 / 1K银粉色母系列");
 // compact UI spots show only the leaf segment.
 function leafName(name) {
@@ -1076,25 +1121,44 @@ onMounted(async () => {
       <div class="wrap footer-in">
         <div>
           <p class="logo logo-foot">TAOJIE<span class="logo-dot">.</span></p>
-          <p>{{ t('footerAbout') }}</p>
+          <p>{{ footerBlurbText }}</p>
         </div>
-        <div>
-          <h4>{{ t('shop') }}</h4><p>{{ tx('Automotive Paint') }}<br />{{ tx('Primers & Clear Coats') }}<br />{{ tx('Home & Living') }}<br />{{ tx('Appliances') }}</p>
-        </div>
-        <div>
-          <h4>{{ t('buyers') }}</h4><p>{{ t('rfqTitle') }}<br />{{ tx('Distributor Program') }}<br />{{ tx('Private Label') }}<br />{{ tx('Samples') }}</p>
-        </div>
+        <!-- Link columns from the site config (「页脚」 page in the
+             admin); links dispatch through onNav like nav items, and
+             text-only links render as plain spans. -->
+        <template v-if="footerCols.length">
+          <div v-for="(col, ci) in footerCols" :key="ci">
+            <h4>{{ col.title }}</h4>
+            <p>
+              <template v-for="(l, li) in col.links" :key="li">
+                <a v-if="l.item" href="#" @click.prevent="onNav(l.item)">{{ l.label }}</a>
+                <span v-else>{{ l.label }}</span>
+                <br v-if="li < col.links.length - 1" />
+              </template>
+            </p>
+          </div>
+        </template>
+        <!-- Fallback: the previously hardcoded columns, used whenever
+             the config carries no usable columns. -->
+        <template v-else>
+          <div>
+            <h4>{{ t('shop') }}</h4><p>{{ tx('Automotive Paint') }}<br />{{ tx('Primers & Clear Coats') }}<br />{{ tx('Home & Living') }}<br />{{ tx('Appliances') }}</p>
+          </div>
+          <div>
+            <h4>{{ t('buyers') }}</h4><p>{{ t('rfqTitle') }}<br />{{ tx('Distributor Program') }}<br />{{ tx('Private Label') }}<br />{{ tx('Samples') }}</p>
+          </div>
+        </template>
         <div v-if="siteConfig.whatsapp || siteConfig.email">
           <h4>{{ t('contact') }}</h4>
           <p><span v-if="siteConfig.whatsapp">{{ t('whatsappLabel') }}<br />{{ siteConfig.whatsapp }}<br /></span><span v-if="siteConfig.email">{{ t('emailLabel') }}<br />{{ siteConfig.email }}</span></p>
         </div>
         <div>
           <h4>{{ t('note') }}</h4>
-          <p>{{ t('noteText') }}</p>
+          <p>{{ footerNoteText }}</p>
           <p v-if="demoMode" class="demo-flag">{{ t('demoFlag') }}</p>
         </div>
       </div>
-      <p class="wrap copyright">{{ t('copyright', { theme: meta.label }) }}</p>
+      <p class="wrap copyright">{{ footerCopyrightText }}</p>
     </footer>
 
     <!-- RFQ modal: the 索取报价 form as a global overlay (replaces the

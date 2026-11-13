@@ -39,7 +39,17 @@ export const siteConfig = reactive({
   instagram: '', // Instagram profile URL
   facebook: '', // Facebook page URL
   youtube: '', // YouTube channel URL
-  wechat: '' // WeChat account ID
+  wechat: '', // WeChat account ID
+  // Footer content (admin-edited on the 「页脚」 page): blurb / note /
+  // copyright are {lang: text} maps (copyright supports a {year}
+  // placeholder, replaced at render); footerColumns are link columns
+  // [{ title: {lang: text}, links: [{ labels, type, link, categoryId }] }]
+  // whose links dispatch like nav items. Empty here = the storefront
+  // falls back to its built-in footer copy, so the footer is never blank.
+  footerBlurb: {},
+  footerNote: {},
+  footerCopyright: {},
+  footerColumns: []
 })
 
 function mergeConfig(data) {
@@ -93,6 +103,35 @@ function mergeConfig(data) {
           faqs: Array.isArray(data[k].faqs) ? data[k].faqs : [],
           testimonials: Array.isArray(data[k].testimonials) ? data[k].testimonials : []
         }
+      }
+      continue
+    }
+    // Footer text maps are objects: any object the backend sends wins
+    // (an emptied map renders the built-in copy via the tx fallback);
+    // a missing/non-object value keeps the default.
+    if (k === 'footerBlurb' || k === 'footerNote' || k === 'footerCopyright') {
+      if (data[k] && typeof data[k] === 'object' && !Array.isArray(data[k])) siteConfig[k] = data[k]
+      continue
+    }
+    // Footer link columns are an array: any array wins, including an
+    // empty one (the admin may deliberately clear the columns, which
+    // falls back to the built-in columns on the storefront). Entries
+    // are lightly normalised so the footer can rely on the shape.
+    if (k === 'footerColumns') {
+      if (Array.isArray(data[k])) {
+        siteConfig.footerColumns = data[k]
+          .filter((c) => c && typeof c === 'object' && !Array.isArray(c))
+          .map((c) => ({
+            title: (c.title && typeof c.title === 'object' && !Array.isArray(c.title)) ? c.title : {},
+            links: (Array.isArray(c.links) ? c.links : [])
+              .filter((l) => l && typeof l === 'object' && !Array.isArray(l))
+              .map((l) => ({
+                labels: (l.labels && typeof l.labels === 'object' && !Array.isArray(l.labels)) ? l.labels : {},
+                type: ['category', 'anchor', 'page', 'external'].includes(String(l.type || '')) ? String(l.type) : '',
+                link: typeof l.link === 'string' ? l.link : '',
+                categoryId: l.categoryId !== undefined && l.categoryId !== null ? String(l.categoryId) : ''
+              }))
+          }))
       }
       continue
     }
