@@ -11,6 +11,7 @@ export const siteConfig = reactive({
   showRfq: true, // RFQ panel + section visibility
   showCart: false, // cart buttons/drawer + orders link; hidden unless the admin turns it on (inquiry-site default)
   showDealer: false, // hero "become a dealer" card; hidden unless the admin turns it on
+  showContact: true, // hero contact card (hotline / WhatsApp / email, no dealer wording); shown unless the admin turns it off
   whatsapp: '', // shown in the footer when set
   email: '', // shown in the footer when set
   currency: 'USD', // legacy label, shown in the top bar only in demo mode
