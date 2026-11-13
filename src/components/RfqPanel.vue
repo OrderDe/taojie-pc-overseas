@@ -37,7 +37,6 @@ function reset() {
 <template>
   <div class="rfq" :class="{ compact }">
     <h3>{{ t('rfqTitle') }}</h3>
-    <p class="rfq-sub">{{ t('rfqSub') }}</p>
     <form v-if="!done" @submit.prevent="submit">
       <input v-model="form.name" required :placeholder="t('rfqName')" />
       <input v-model="form.contact" required :placeholder="t('rfqContact')" />

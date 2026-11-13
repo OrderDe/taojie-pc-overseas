@@ -65,6 +65,10 @@ const rfqProduct = ref('')
 // and the product prefill applies afresh.
 const rfqOpen = ref(false)
 const rfqNonce = ref(0)
+// Contact-details modal: the default target of the hero cards'
+// "talk to sales" buttons (see onSalesBtn / siteConfig.salesBtnAction).
+const contactOpen = ref(false)
+const wxCopied = ref(false)
 const toast = ref('')
 // Label of the page the visitor is currently on, for the statistics
 // beacon: heartbeats report it, trackView updates it at each stop.
@@ -630,7 +634,7 @@ function addToCart(p) {
 function removeFromCart(id) { cart.value = cart.value.filter((i) => String(i.id) !== String(id)) }
 // Top-bar Help opens the online chat panel (ChatWidget listens for this).
 function openHelpChat() { window.dispatchEvent(new Event('tj-open-chat')) }
-// 索取报价 / 联系销售 entries open the RFQ modal (globally mounted, so
+// 免费获取报价 / 联系销售 entries open the RFQ modal (globally mounted, so
 // it works from any view). showRfq stays the admin kill-switch: with it
 // off, the entries are inert just like the old hidden section was.
 function requestQuote(p) {
@@ -640,10 +644,38 @@ function requestQuote(p) {
 }
 function openRfqModal() {
   if (!siteConfig.showRfq) return
+  contactOpen.value = false
   rfqNonce.value += 1
   rfqOpen.value = true
 }
 function closeRfqModal() { rfqOpen.value = false }
+// Hero card "talk to sales" buttons dispatch on the admin-chosen
+// behaviour (siteConfig.salesBtnAction): the contact-details modal
+// by default, the quote form, or the online chat window. The other
+// RFQ entries (nav / footer #rfq links, the catalogue button,
+// product-scoped entries) keep going straight to the RFQ modal.
+function onSalesBtn() {
+  trackClick('点联系销售')
+  const action = siteConfig.salesBtnAction
+  if (action === 'rfq') { rfqProduct.value = ''; openRfqModal() }
+  else if (action === 'chat') openHelpChat()
+  else openContactModal()
+}
+function openContactModal() {
+  rfqOpen.value = false
+  wxCopied.value = false
+  contactOpen.value = true
+}
+function closeContactModal() { contactOpen.value = false }
+// WeChat has no web jump: a tap copies the ID (same pattern as the
+// floating social panel); the ID itself stays visible either way.
+async function copyWechatId() {
+  wxCopied.value = false
+  try {
+    await navigator.clipboard.writeText(siteConfig.wechat)
+    wxCopied.value = true
+  } catch { /* clipboard unavailable; the ID is shown for manual copy */ }
+}
 // 询价 on a product (card / detail page): open the online chat with the
 // product attached, instead of scrolling to the RFQ form. The ChatWidget
 // owns the attachment state; it also persists locally so the widget
@@ -710,7 +742,7 @@ onMounted(async () => {
     const slug = pageSlugFromHash(window.location.hash)
     if (slug && slug !== customPageSlug.value) openCustomPage(slug)
   })
-  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeRfqModal() })
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeRfqModal(); closeContactModal() } })
 })
 </script>
 
@@ -798,12 +830,12 @@ onMounted(async () => {
               <p v-if="siteConfig.hotline" class="promo-tel">{{ t('exportHotline') }}<br /><b>{{ siteConfig.hotline }}</b></p>
               <p v-if="siteConfig.whatsapp" class="promo-tel">{{ t('whatsappLabel') }}<br /><b>{{ siteConfig.whatsapp }}</b></p>
               <p v-if="siteConfig.email" class="promo-tel">{{ t('emailLabel') }}<br /><b>{{ siteConfig.email }}</b></p>
-              <button class="btn btn-light" @click="requestQuote(null)">{{ t('talkToSales') }}</button>
+              <button class="btn btn-light" @click="onSalesBtn">{{ t('talkToSales') }}</button>
             </div>
             <div v-else-if="siteConfig.showDealer" id="dealer" class="promo">
               <h3>{{ siteConfig.dealerTitle || t('distributorTitle') }}</h3>
               <p>{{ siteConfig.dealerText || t('distributorText') }}</p>
-              <button class="btn btn-light" @click="requestQuote(null)">{{ siteConfig.dealerButton || t('talkToSales') }}</button>
+              <button class="btn btn-light" @click="onSalesBtn">{{ siteConfig.dealerButton || t('talkToSales') }}</button>
               <p class="promo-tel">{{ t('exportHotline') }}<br /><b>{{ siteConfig.hotline || '+86 XXX XXXX XXXX' }}</b></p>
             </div>
           </aside>
@@ -1171,12 +1203,43 @@ onMounted(async () => {
       <p class="wrap copyright">{{ footerCopyrightText }}</p>
     </footer>
 
-    <!-- RFQ modal: the 索取报价 form as a global overlay (replaces the
+    <!-- RFQ modal: the 免费获取报价 form as a global overlay (replaces the
          old in-flow section at the bottom of the home view). -->
     <div v-if="rfqOpen" class="modal-backdrop" @click="closeRfqModal">
       <div class="modal-card" role="dialog" aria-modal="true" :aria-label="t('rfqTitle')" @click.stop>
         <button class="icon-btn modal-close" @click="closeRfqModal" aria-label="Close">×</button>
         <RfqPanel :key="rfqNonce" :product-name="rfqProduct" />
+      </div>
+    </div>
+    <!-- Contact-details modal: default target of the hero cards'
+         "talk to sales" buttons (the admin can reroute them to the
+         RFQ form or the chat via salesBtnAction). Only channels the
+         admin actually filled in are rendered. -->
+    <div v-if="contactOpen" class="modal-backdrop" @click="closeContactModal">
+      <div class="modal-card" role="dialog" aria-modal="true" :aria-label="t('contact')" @click.stop>
+        <button class="icon-btn modal-close" @click="closeContactModal" aria-label="Close">×</button>
+        <h3 class="contact-modal-title">{{ t('contact') }}</h3>
+        <div v-if="siteConfig.hotline || siteConfig.whatsapp || siteConfig.email || siteConfig.wechat" class="contact-rows">
+          <p v-if="siteConfig.hotline" class="contact-row">
+            <span class="contact-label">{{ t('exportHotline') }}</span>
+            <a class="contact-value" :href="'tel:' + siteConfig.hotline.replace(/[\s()-]/g, '')">{{ siteConfig.hotline }}</a>
+          </p>
+          <p v-if="siteConfig.whatsapp" class="contact-row">
+            <span class="contact-label">{{ t('whatsappLabel') }}</span>
+            <b class="contact-value">{{ siteConfig.whatsapp }}</b>
+            <a class="btn btn-primary btn-sm" :href="'https://wa.me/' + siteConfig.whatsapp.replace(/\D/g, '')" target="_blank" rel="noopener">{{ t('openWhatsApp') }}</a>
+          </p>
+          <p v-if="siteConfig.email" class="contact-row">
+            <span class="contact-label">{{ t('emailLabel') }}</span>
+            <a class="contact-value" :href="'mailto:' + siteConfig.email">{{ siteConfig.email }}</a>
+          </p>
+          <p v-if="siteConfig.wechat" class="contact-row">
+            <span class="contact-label">{{ t('wechatLabel') }}</span>
+            <b class="contact-value">{{ siteConfig.wechat }}</b>
+            <button type="button" class="btn btn-ghost btn-sm" @click="copyWechatId">{{ wxCopied ? t('copied') : t('tapToCopy') }}</button>
+          </p>
+        </div>
+        <p v-else class="contact-empty">{{ t('contactComingSoon') }}</p>
       </div>
     </div>
     <CartDrawer :open="cartOpen" :items="cart" @close="cartOpen = false" @remove="removeFromCart" @clear="cart = []" />

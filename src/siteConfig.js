@@ -53,7 +53,11 @@ export const siteConfig = reactive({
   // Header search-box placeholder copy ({lang: text} map, admin-edited
   // on the site-config page). Empty per language = the built-in i18n
   // searchPh copy for that language.
-  searchPlaceholder: {}
+  searchPlaceholder: {},
+  // Hero card "talk to sales" button behaviour (admin site-config):
+  // 'contact' opens the contact-details modal, 'rfq' the quote form,
+  // 'chat' the online chat window.
+  salesBtnAction: 'contact'
 })
 
 function mergeConfig(data) {
