@@ -761,6 +761,7 @@ onMounted(async () => {
     <!-- Zone nav -->
     <nav class="zones"><div class="wrap zones-in">
       <button v-for="(item, idx) in zones" :key="idx" @click="onNav(item)">{{ item.label }}</button>
+      <button v-if="siteConfig.showRfq" class="zones-rfq" @click="requestQuote(null)">{{ t('rfqTitle') }}</button>
     </div></nav>
 
     <main v-if="view === 'home'">

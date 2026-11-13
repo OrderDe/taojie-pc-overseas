@@ -72,9 +72,19 @@ body { background: #f3f3f5; }
 .cart-btn { border: 2px solid var(--brand); background: transparent; color: var(--brand); border-radius: 999px; padding: 10px 22px; font-weight: 700; }
 .cart-btn b { background: var(--accent); color: #fff; border-radius: 999px; padding: 1px 8px; margin-inline-start: 6px; }
 .zones { background: var(--surface); border-bottom: 1px solid var(--line); }
-.zones-in { display: flex; gap: 30px; }
+.zones-in { display: flex; flex-wrap: wrap; align-items: center; gap: 0 30px; }
 .zones-in button { border: 0; background: none; padding: 12px 2px; font-weight: 600; color: var(--ink); }
 .zones-in button:hover { color: var(--brand); }
+/* Persistent RFQ call-to-action at the end of the zone nav: solid brand
+   pill with a soft breathing halo, so the quote entry is always visible
+   next to the nav items. margin-inline-start:auto pins it to the row's
+   end; flex-wrap on .zones-in lets nav items wrap on narrow screens
+   instead of squeezing the CTA out. Same showRfq kill-switch and the
+   same requestQuote() handler as the catalogue RFQ button. */
+.zones-in button.zones-rfq { margin-inline-start: auto; flex: none; align-self: center; background: var(--brand); color: #fff; border-radius: 999px; padding: 8px 20px; font-weight: 700; white-space: nowrap; animation: rfq-pulse 2s ease-out infinite; }
+.zones-in button.zones-rfq:hover { color: #fff; filter: brightness(1.08); }
+@keyframes rfq-pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand) 45%, transparent); } 70% { box-shadow: 0 0 0 9px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+@media (prefers-reduced-motion: reduce) { .zones-in button.zones-rfq { animation: none; } }
 
 /* Hero */
 .hero { position: relative; background: var(--hero); color: var(--hero-ink); padding: 44px 0 64px; overflow: visible; }
@@ -96,6 +106,12 @@ body { background: #f3f3f5; }
 .hero-side .promo, .hero-side .rfq { background: rgba(255,255,255,.97); color: #141414; border-radius: var(--radius); padding: 22px; box-shadow: var(--card-shadow); }
 .promo h3 { margin: 0 0 8px; font-size: 22px; } .promo p { color: #555; }
 .promo-tel { margin-top: 16px; font-size: 13px; color: #555; } .promo-tel b { font-size: 18px; color: #141414; }
+/* Hero contact/dealer card: its talk-to-sales button must stand out on
+   the near-white card, so it takes the solid brand fill with a larger
+   hit area instead of the plain light button. Scoped to .hero-side —
+   the .btn-light buttons on the profile/custom pages keep their look. */
+.hero-side .promo .btn-light { background: var(--brand); border-color: var(--brand); color: #fff; padding: 13px 30px; margin-top: 16px; }
+.hero-side .promo .btn-light:hover { filter: brightness(1.08); }
 /* RFQ */
 .rfq h3 { margin: 0 0 4px; font-size: 20px; } .rfq-sub { color: var(--muted); margin: 0 0 14px; font-size: 14px; }
 .rfq form { display: grid; gap: 10px; }
