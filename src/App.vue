@@ -698,9 +698,9 @@ onMounted(async () => {
       <button class="btn btn-ghost btn-sm" @click="view = 'home'">{{ t('back') }}</button>
       <div class="detail-grid">
         <div class="detail-media-col">
-          <video v-if="selected.video" class="detail-video" :src="selected.video" :poster="selected.image || undefined" controls preload="metadata"></video>
-          <div class="detail-media" :style="{ background: `linear-gradient(135deg, ${selected.visual[0]}, ${selected.visual[1]})` }">
-            <img v-if="selected.image" :src="selected.image" :alt="selected.name" @error="$event.target.remove()" />
+          <video v-for="url in selected.videos" :key="url" class="detail-video" :src="url" :poster="selected.image || undefined" controls preload="metadata"></video>
+          <div v-for="(url,index) in (selected.images.length ? selected.images : [''])" :key="url || index" class="detail-media" :style="{ background: `linear-gradient(135deg, ${selected.visual[0]}, ${selected.visual[1]})` }">
+            <img v-if="url" :src="url" :alt="selected.name + ' ' + (index + 1)" @error="$event.target.remove()" />
             <span v-else class="detail-glyph">{{ selected.visual[2] }}</span>
             <span class="card-spectrum"></span>
           </div>
