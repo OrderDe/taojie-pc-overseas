@@ -13,6 +13,7 @@
 // mode (backend unreachable) the local copy alone drives the card.
 import { tx } from '../i18n.js'
 import { formatPrice } from './currency.js'
+import { showAsNegotiable } from './pricing.js'
 
 const LS_KEY = 'taojie-chat-product'
 
@@ -22,7 +23,9 @@ export function buildChatProduct(p) {
   if (!p) return null
   const name = tx(p.name) || ''
   if (!name) return null
-  const negotiable = !!p.negotiable
+  // The snapshot mirrors what the visitor saw: the global price switch
+  // counts too, so prices-off goods attach as 面议 with no price label.
+  const negotiable = showAsNegotiable(p)
   return {
     id: String(p.id ?? ''),
     name: String(name),

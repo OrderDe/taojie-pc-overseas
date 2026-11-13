@@ -12,6 +12,7 @@ import { LANGS, locale, setLocale, t, tx, themeText } from './i18n.js'
 import { CURRENCIES, displayCode, baseCode, isConverted, formatPrice, initFx, setDisplay, currencyForLocale } from './utils/currency.js'
 import { startTracking, trackView, trackClick } from './utils/track.js'
 import { buildChatProduct, saveChatProduct } from './utils/chatProduct.js'
+import { showAsNegotiable } from './utils/pricing.js'
 
 const THEMES = {
   a: { label: 'A · Classic Mall' },
@@ -41,6 +42,9 @@ const searchedQuery = ref('')
 const activeCategory = ref('')
 const activeBrand = ref('')
 const selected = ref(null)
+// Detail page renders as 面议 when the product is negotiable OR the
+// admin's global price switch (showPrices) is off.
+const selectedNegotiable = computed(() => showAsNegotiable(selected.value))
 const expandedCategoryIds = ref(new Set())
 const navigationCategories = computed(() => {
   const result = []
@@ -780,16 +784,16 @@ onMounted(async () => {
         <div class="detail-info">
           <p class="card-cat">{{ tx(selected.category) }}</p>
           <h1>{{ tx(selected.name) }}</h1>
-          <p class="detail-price"><b v-if="selected.negotiable" class="price-negotiable">{{ t('negotiable') }}</b>
+          <p class="detail-price"><b v-if="selectedNegotiable" class="price-negotiable">{{ t('negotiable') }}</b>
             <template v-else>
               <b>{{ formatPrice(selected.price) }}</b>
               <s v-if="selected.otPrice > selected.price">{{ formatPrice(selected.otPrice) }}</s>
               <small v-if="selected.unit && String(selected.unit).trim() && String(selected.unit).trim() !== '无'">/ {{ tx(selected.unit) }}</small>
             </template></p>
-          <p v-if="isConverted && !selected.negotiable" class="fx-note">{{ t('fxNote', { base: baseCode }) }}</p>
+          <p v-if="isConverted && !selectedNegotiable" class="fx-note">{{ t('fxNote', { base: baseCode }) }}</p>
           <p v-if="selected.blurb" class="detail-blurb">{{ tx(selected.blurb) }}</p>
 
-          <div v-if="selected.moq" class="detail-tiers">
+          <div v-if="selected.moq && !selectedNegotiable" class="detail-tiers">
             <h3>{{ t('tiersTitle') }}</h3>
             <p>{{ t('tiersText', { moq: selected.moq, unit: tx(selected.unit), moq5: selected.moq * 5, moq20: selected.moq * 20 }) }}</p>
           </div>
@@ -800,7 +804,7 @@ onMounted(async () => {
           <p v-else class="detail-blurb">{{ t('tdsNote') }}</p>
 
           <div class="detail-actions" :class="{ 'actions-solo': !siteConfig.showCart }">
-            <button v-if="siteConfig.showCart && !selected.negotiable" class="btn btn-primary" @click="addToCart(selected)">{{ t('addToCart') }}</button>
+            <button v-if="siteConfig.showCart && !selectedNegotiable" class="btn btn-primary" @click="addToCart(selected)">{{ t('addToCart') }}</button>
             <button class="btn btn-ghost" @click="requestQuoteChat(selected)">{{ t('requestQuote') }}</button>
           </div>
           <p class="trust" v-if="theme === 'b'">{{ t('trustText') }}</p>
