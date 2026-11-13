@@ -85,9 +85,8 @@ body { background: #f3f3f5; }
 .rail button { text-align: start; border: 0; background: none; padding: 9px 10px; border-radius: 8px; font-size: 14px; color: #222; display: flex; justify-content: space-between; }
 .rail button:hover, .rail button.active { background: #f1eaf4; font-weight: 700; }
 .site[data-theme='a'] .rail button:hover, .site[data-theme='a'] .rail button.active { background: #ffe9e7; }
-.site[data-theme='c'] .rail { display: none; }
-.site[data-theme='c'] .hero-in { grid-template-columns: 1fr 300px; }
-.site[data-theme='c'] .hero-in.no-side { grid-template-columns: 1fr; }
+/* Theme C keeps the category rail like every other theme — switching
+   themes must never hide navigation or catalogue functions. */
 .hero-eyebrow { text-transform: uppercase; letter-spacing: 3px; font-size: 13px; opacity: .85; margin: 6px 0 10px; }
 .hero-main h1 { font-size: clamp(38px, 4.6vw, 64px); line-height: 1.04; margin: 0 0 14px; font-weight: 900; max-width: 640px; }
 .site[data-theme='f'] .hero-main h1 { font-weight: 400; }
@@ -202,8 +201,7 @@ body { background: #f3f3f5; }
 @media (max-width: 1020px) {
   .grid { grid-template-columns: repeat(2, 1fr); }
   .hero-in { grid-template-columns: 1fr; }
-  .site[data-theme='c'] .hero-in { grid-template-columns: 1fr; }
-  .hero-in.no-side, .site[data-theme='c'] .hero-in.no-side { grid-template-columns: 1fr; }
+  .hero-in.no-side { grid-template-columns: 1fr; }
   .rail { flex-direction: row; flex-wrap: wrap; } .rail h2 { width: 100%; }
   .detail-grid, .footer-in { grid-template-columns: 1fr; }
   .header-in { flex-wrap: wrap; }
@@ -234,6 +232,8 @@ body { background: #f3f3f5; }
 .formula-lab { color: var(--muted); font-size: 14px; margin: 4px 0 10px; }
 .formula-grams { display: inline-flex; gap: 10px; align-items: center; margin-bottom: 10px; font-size: 14px; color: var(--muted); }
 .formula-grams input { width: 130px; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--ink); font: inherit; }
+.profile-embed-page { padding: 0 4px; }
+.profile-embed { display: block; width: 100%; height: calc(100vh - 158px); min-height: 560px; border: 0; background: #fff; }
 .profile-head { margin-bottom: 6px; }
 .profile-logo { max-height: 56px; width: auto; }
 .profile-story { font-size: 16.5px; line-height: 1.75; max-width: 860px; white-space: pre-wrap; }

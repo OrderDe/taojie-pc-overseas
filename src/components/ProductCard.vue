@@ -30,24 +30,27 @@ const unitLabel = computed(() => {
         <li v-for="(v, k) in Object.entries(product.specs).slice(0, 2)" :key="k"><span>{{ tx(k) }}</span><b>{{ tx(v) }}</b></li>
       </ul>
 
-      <!-- Theme G: tiered pricing -->
-      <div v-if="theme === 'g' && product.moq" class="card-tiers">
+      <!-- Theme G: tiered pricing (numeric tiers make no sense for 面议 goods) -->
+      <div v-if="theme === 'g' && product.moq && !product.negotiable" class="card-tiers">
         <span>{{ product.moq }}+ · {{ formatPrice(product.price) }}</span>
         <span>{{ product.moq * 5 }}+ · {{ formatPrice(product.price * 0.92) }}</span>
         <span>{{ product.moq * 20 }}+ · {{ formatPrice(product.price * 0.85) }}</span>
       </div>
 
       <p class="card-price">
-        <b>{{ formatPrice(product.price) }}</b>
-        <s v-if="product.otPrice > product.price">{{ formatPrice(product.otPrice) }}</s>
-        <small v-if="unitLabel">/ {{ tx(unitLabel) }}</small>
+        <b v-if="product.negotiable" class="price-negotiable">{{ t('negotiable') }}</b>
+        <template v-else>
+          <b>{{ formatPrice(product.price) }}</b>
+          <s v-if="product.otPrice > product.price">{{ formatPrice(product.otPrice) }}</s>
+          <small v-if="unitLabel">/ {{ tx(unitLabel) }}</small>
+        </template>
       </p>
       <p class="card-meta">
         <span v-if="product.sales">{{ t('sold', { n: product.sales }) }}</span>
         <span v-if="product.moq">{{ t('moqLabel', { n: product.moq }) }}</span>
       </p>
       <div class="card-actions" :class="{ 'actions-solo': !siteConfig.showCart }" @click.stop>
-        <button v-if="siteConfig.showCart" class="btn btn-primary btn-sm" @click="$emit('add', product)">{{ t('addToCart') }}</button>
+        <button v-if="siteConfig.showCart && !product.negotiable" class="btn btn-primary btn-sm" @click="$emit('add', product)">{{ t('addToCart') }}</button>
         <button class="btn btn-ghost btn-sm" @click="$emit('quote', product)">{{ t('requestQuote') }}</button>
       </div>
     </div>

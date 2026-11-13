@@ -525,10 +525,13 @@ onMounted(async () => {
         <div class="detail-info">
           <p class="card-cat">{{ tx(selected.category) }}</p>
           <h1>{{ tx(selected.name) }}</h1>
-          <p class="detail-price"><b>{{ formatPrice(selected.price) }}</b>
-            <s v-if="selected.otPrice > selected.price">{{ formatPrice(selected.otPrice) }}</s>
-            <small v-if="selected.unit && String(selected.unit).trim() && String(selected.unit).trim() !== '无'">/ {{ tx(selected.unit) }}</small></p>
-          <p v-if="isConverted" class="fx-note">{{ t('fxNote', { base: baseCode }) }}</p>
+          <p class="detail-price"><b v-if="selected.negotiable" class="price-negotiable">{{ t('negotiable') }}</b>
+            <template v-else>
+              <b>{{ formatPrice(selected.price) }}</b>
+              <s v-if="selected.otPrice > selected.price">{{ formatPrice(selected.otPrice) }}</s>
+              <small v-if="selected.unit && String(selected.unit).trim() && String(selected.unit).trim() !== '无'">/ {{ tx(selected.unit) }}</small>
+            </template></p>
+          <p v-if="isConverted && !selected.negotiable" class="fx-note">{{ t('fxNote', { base: baseCode }) }}</p>
           <p v-if="selected.blurb" class="detail-blurb">{{ tx(selected.blurb) }}</p>
 
           <div v-if="selected.moq" class="detail-tiers">
@@ -542,7 +545,7 @@ onMounted(async () => {
           <p v-else class="detail-blurb">{{ t('tdsNote') }}</p>
 
           <div class="detail-actions" :class="{ 'actions-solo': !siteConfig.showCart }">
-            <button v-if="siteConfig.showCart" class="btn btn-primary" @click="addToCart(selected)">{{ t('addToCart') }}</button>
+            <button v-if="siteConfig.showCart && !selected.negotiable" class="btn btn-primary" @click="addToCart(selected)">{{ t('addToCart') }}</button>
             <button class="btn btn-ghost" @click="requestQuote(selected)">{{ t('requestQuote') }}</button>
           </div>
           <p class="trust" v-if="theme === 'b'">{{ t('trustText') }}</p>
@@ -615,7 +618,14 @@ onMounted(async () => {
       </template>
     </main>
 
-    <!-- Company profile view -->
+    <!-- Company profile view: full-page embed when an embed URL is
+         configured (mirrors the original site, whose profile page is a
+         borderless iframe of the company homepage). -->
+    <main v-else-if="view === 'profile' && siteConfig.profileUrl" class="profile-embed-page">
+      <iframe class="profile-embed" :src="siteConfig.profileUrl" :title="t('companyProfile')" frameborder="0"></iframe>
+    </main>
+
+    <!-- Company profile view, text fallback (embed URL cleared in admin) -->
     <main v-else-if="view === 'profile'" class="wrap profile-page">
       <div class="profile-head">
         <img v-if="siteConfig.logo" class="profile-logo" :src="siteConfig.logo" alt="TAOJIE" />

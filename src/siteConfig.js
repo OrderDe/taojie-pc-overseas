@@ -29,6 +29,7 @@ export const siteConfig = reactive({
   hotline: '', // export hotline phone shown on the dealer card
   storyTitle: '', // brand story title (theme F section)
   storyText: '', // brand story body text
+  profileUrl: 'https://williscarpaint.com/', // company profile page: embedded full-page in an iframe when set; empty = text version (storyTitle/storyText)
   // "Start Chat with" floating panel (SocialWidget): full profile URLs;
   // empty = that icon is hidden. wechat is an account ID (tap copies it).
   // whatsapp / email / hotline above are reused as panel icons too.
@@ -58,6 +59,15 @@ function mergeConfig(data) {
             return item
           })
       }
+      continue
+    }
+    // profileUrl is the exception to the "empty = keep default" rule
+    // below: an explicitly cleared value ('') must win over the built-in
+    // default, because clearing it in the admin is how the profile page
+    // switches back to the text version. Only undefined/null (field not
+    // sent at all) keeps the default.
+    if (k === 'profileUrl') {
+      if (typeof data[k] === 'string') siteConfig.profileUrl = data[k]
       continue
     }
     if (data[k] === undefined || data[k] === null || data[k] === '') continue
