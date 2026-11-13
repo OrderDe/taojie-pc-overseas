@@ -101,12 +101,20 @@ body { background: #f3f3f5; }
 .rfq form { display: grid; gap: 10px; }
 .rfq input, .rfq textarea { border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; font: inherit; font-size: 14px; width: 100%; background: #fff; color: #141414; }
 .rfq-done { background: #eefaf0; border: 1px solid #bfe6c8; border-radius: 10px; padding: 14px; color: #17351d; }
-.rfq-section { padding-top: 8px; padding-bottom: 48px; }
 /* Nav anchor targets: a little breathing room above the scrolled-to block */
-#catalogue, #story, #dealer, #rfq { scroll-margin-top: 16px; }
-.rfq-section .rfq { border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; background: var(--surface); }
-.rfq-section .rfq form { grid-template-columns: repeat(2, 1fr); }
-.rfq-section .rfq textarea, .rfq-section .rfq .btn { grid-column: 1 / -1; }
+#catalogue, #story, #dealer { scroll-margin-top: 16px; }
+/* RFQ modal (replaces the old in-flow RFQ section at the page bottom) */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 65; display: flex; align-items: center; justify-content: center; padding: 18px; }
+.modal-card { position: relative; width: min(560px, 100%); max-height: calc(100vh - 36px); overflow: auto; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--card-shadow); padding: 26px; }
+.modal-close { position: absolute; top: 10px; inset-inline-end: 12px; }
+.modal-card .rfq form { grid-template-columns: repeat(2, 1fr); }
+.modal-card .rfq textarea, .modal-card .rfq .btn { grid-column: 1 / -1; }
+@media (max-width: 640px) {
+  .modal-backdrop { padding: 0; }
+  .modal-card { width: 100%; height: 100%; max-height: none; border: none; border-radius: 0; }
+  .modal-card .rfq form { grid-template-columns: 1fr; }
+}
+.catalogue-rfq { margin-inline-start: 14px; }
 
 /* Buttons */
 .btn { border-radius: 999px; border: 2px solid var(--brand); padding: 11px 22px; font-weight: 700; background: transparent; color: var(--brand); }
@@ -205,7 +213,6 @@ body { background: #f3f3f5; }
   .rail { flex-direction: row; flex-wrap: wrap; } .rail h2 { width: 100%; }
   .detail-grid, .footer-in { grid-template-columns: 1fr; }
   .header-in { flex-wrap: wrap; }
-  .rfq-section .rfq form { grid-template-columns: 1fr; }
 }
 @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
 

@@ -60,6 +60,11 @@ const navigationCategories = computed(() => {
 const cart = ref([])
 const cartOpen = ref(false)
 const rfqProduct = ref('')
+// RFQ form lives in a global modal (no in-flow section any more);
+// rfqNonce remounts the panel per open so its form/done state resets
+// and the product prefill applies afresh.
+const rfqOpen = ref(false)
+const rfqNonce = ref(0)
 const toast = ref('')
 // Label of the page the visitor is currently on, for the statistics
 // beacon: heartbeats report it, trackView updates it at each stop.
@@ -101,13 +106,13 @@ const cartCount = computed(() => cart.value.reduce((s, i) => s + i.qty, 0))
 const meta = computed(() => THEMES[theme.value])
 const heroTitle = computed(() => siteConfig.heroTitle || themeText(theme.value).headline)
 const heroSub = computed(() => siteConfig.heroSubtitle || themeText(theme.value).sub)
-// Hero side column: theme G shows the compact RFQ panel there; every theme
-// otherwise shows the contact card (showContact, default on — contact
+// Hero side column: the contact card (showContact, default on — contact
 // details only, no dealer wording), falling back to the dealer card only
-// when the contact card is off and the dealer card is on. The column
+// when the contact card is off and the dealer card is on. (The RFQ form
+// used to sit here for theme G; it is a global modal now.) The column
 // exists only when one of them is enabled, so hiding them all leaves
 // no empty grid track.
-const heroSideVisible = computed(() => (theme.value === 'g' && siteConfig.showRfq) || siteConfig.showContact || siteConfig.showDealer)
+const heroSideVisible = computed(() => siteConfig.showContact || siteConfig.showDealer)
 // Top navigation: admin-configured navItems win; empty = i18n defaults
 // (label-only items with no click action).
 const zones = computed(() => navigationItems(siteConfig,t))
@@ -146,6 +151,9 @@ async function onNav(item) {
     // from admin-configured nav items via the #formula / #profile links.
     if (item.link === '#formula') { openFormula(); return }
     if (item.link === '#profile') { openProfile(); return }
+    // The RFQ form is a modal now, not a page section: #rfq opens it
+    // from whatever view the visitor is on.
+    if (item.link === '#rfq') { openRfqModal(); return }
     const id = String(item.link || '').replace(/^#/, '')
     if (!id) return
     view.value = 'home'
@@ -568,12 +576,20 @@ function addToCart(p) {
 function removeFromCart(id) { cart.value = cart.value.filter((i) => String(i.id) !== String(id)) }
 // Top-bar Help opens the online chat panel (ChatWidget listens for this).
 function openHelpChat() { window.dispatchEvent(new Event('tj-open-chat')) }
+// 索取报价 / 联系销售 entries open the RFQ modal (globally mounted, so
+// it works from any view). showRfq stays the admin kill-switch: with it
+// off, the entries are inert just like the old hidden section was.
 function requestQuote(p) {
   trackClick('点联系销售/询价')
   rfqProduct.value = p ? tx(p.name) : ''
-  view.value = 'home'
-  setTimeout(() => document.getElementById('rfq')?.scrollIntoView({ behavior: 'smooth' }), 60)
+  openRfqModal()
 }
+function openRfqModal() {
+  if (!siteConfig.showRfq) return
+  rfqNonce.value += 1
+  rfqOpen.value = true
+}
+function closeRfqModal() { rfqOpen.value = false }
 // 询价 on a product (card / detail page): open the online chat with the
 // product attached, instead of scrolling to the RFQ form. The ChatWidget
 // owns the attachment state; it also persists locally so the widget
@@ -640,6 +656,7 @@ onMounted(async () => {
     const slug = pageSlugFromHash(window.location.hash)
     if (slug && slug !== customPageSlug.value) openCustomPage(slug)
   })
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeRfqModal() })
 })
 </script>
 
@@ -720,8 +737,7 @@ onMounted(async () => {
           </div>
 
           <aside v-if="heroSideVisible" class="hero-side">
-            <RfqPanel v-if="theme === 'g' && siteConfig.showRfq" :product-name="rfqProduct" compact />
-            <div v-else-if="siteConfig.showContact" id="dealer" class="promo">
+            <div v-if="siteConfig.showContact" id="dealer" class="promo">
               <h3>{{ t('contact') }}</h3>
               <p>{{ t('contactText') }}</p>
               <p v-if="siteConfig.hotline" class="promo-tel">{{ t('exportHotline') }}<br /><b>{{ siteConfig.hotline }}</b></p>
@@ -751,6 +767,7 @@ onMounted(async () => {
           <h2>{{ resultsTitle }}</h2>
           <span v-if="loading">{{ t('loading') }}</span>
           <span v-else>{{ t('productsCount', { n: products.length }) }}</span>
+          <button v-if="siteConfig.showRfq" class="btn btn-primary btn-sm catalogue-rfq" @click="requestQuote(null)">{{ t('rfqTitle') }}</button>
         </div>
         <div v-if="brands.length" class="brands">
           <button type="button" :class="{ active: !activeBrand }" @click="pickBrand('')">{{ t('allProducts') }}</button>
@@ -763,10 +780,6 @@ onMounted(async () => {
         </div>
       </section>
 
-      <!-- RFQ -->
-      <section v-if="siteConfig.showRfq" id="rfq" class="wrap rfq-section">
-        <RfqPanel :product-name="rfqProduct" />
-      </section>
     </main>
 
     <!-- Detail view -->
@@ -1084,6 +1097,14 @@ onMounted(async () => {
       <p class="wrap copyright">{{ t('copyright', { theme: meta.label }) }}</p>
     </footer>
 
+    <!-- RFQ modal: the 索取报价 form as a global overlay (replaces the
+         old in-flow section at the bottom of the home view). -->
+    <div v-if="rfqOpen" class="modal-backdrop" @click="closeRfqModal">
+      <div class="modal-card" role="dialog" aria-modal="true" :aria-label="t('rfqTitle')" @click.stop>
+        <button class="icon-btn modal-close" @click="closeRfqModal" aria-label="Close">×</button>
+        <RfqPanel :key="rfqNonce" :product-name="rfqProduct" />
+      </div>
+    </div>
     <CartDrawer :open="cartOpen" :items="cart" @close="cartOpen = false" @remove="removeFromCart" @clear="cart = []" />
     <SocialWidget />
     <ChatWidget />
