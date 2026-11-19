@@ -894,6 +894,7 @@ onMounted(async () => {
         </div>
         <div class="detail-info">
           <p class="card-cat">{{ tx(selected.category) }}</p>
+          <p v-if="selected.tag" class="detail-tag-row"><span class="card-tag detail-tag">{{ selected.tag }}</span></p>
           <h1>{{ tx(selected.name) }}</h1>
           <p class="detail-price"><b v-if="selectedNegotiable" class="price-negotiable">{{ t('negotiable') }}</b>
             <template v-else>
@@ -902,6 +903,7 @@ onMounted(async () => {
               <small v-if="selected.unit && String(selected.unit).trim() && String(selected.unit).trim() !== '无'">/ {{ tx(selected.unit) }}</small>
             </template></p>
           <p v-if="isConverted && !selectedNegotiable" class="fx-note">{{ t('fxNote', { base: baseCode }) }}</p>
+          <p v-if="selected.sales" class="detail-sales">{{ t('sold', { n: selected.sales }) }}</p>
           <p v-if="selected.blurb" class="detail-blurb">{{ tx(selected.blurb) }}</p>
 
           <div v-if="selected.moq && !selectedNegotiable" class="detail-tiers">

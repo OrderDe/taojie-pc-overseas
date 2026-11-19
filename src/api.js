@@ -72,14 +72,21 @@ export function normalizeProduct(raw, idx = 0) {
     price: Number(pick(raw, ['price', 'vipPrice'], 0)) || 0,
     otPrice: Number(pick(raw, ['otPrice', 'marketPrice', 'originalPrice'], 0)) || 0,
     sales: Number(pick(raw, ['sales', 'ficti', 'sold'], 0)) || 0,
-    unit: String(pick(raw, ['unitName', 'unit'], 'pc')),
+    // No 'pc' fallback: an empty unit must stay empty so the card/detail
+    // "/ unit" suffix (shown only for a real unit, never for '无') does
+    // not appear on unit-less products.
+    unit: String(pick(raw, ['unitName', 'unit'], '')),
     moq: Number(pick(raw, ['minQty', 'moq'], 0)) || 0,
     image: String(pick(raw, ['image', 'pic', 'picUrl', 'sliderImage'], '')),
     video: String(pick(raw, ['video', 'videoUrl'], '')),
     images: Array.isArray(raw.images) ? raw.images.filter(Boolean) : [String(pick(raw,['image','pic','picUrl','sliderImage'],''))].filter(Boolean),
     videos: Array.isArray(raw.videos) ? raw.videos.filter(Boolean) : [String(pick(raw,['video','videoUrl'],''))].filter(Boolean),
     visual: [c1, c2, glyphSource.replace(/[^A-Za-z0-9]/g, '').slice(0, 3).toUpperCase() || 'TJ'],
-    tag: '',
+    // The backend returns the product's corner tag (ProductResponse.tag);
+    // this used to be hard-coded to '' here, so live products never
+    // showed a tag even though demo data (which bypasses this function)
+    // did.
+    tag: String(pick(raw, ['tag'], '')),
     blurb: String(pick(raw, ['storeInfo', 'description', 'intro', 'keyword'], '')).replace(/<[^>]*>/g, '').slice(0, 160),
     specs,
     _raw: raw

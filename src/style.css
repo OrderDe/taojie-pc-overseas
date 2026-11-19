@@ -63,9 +63,9 @@ body { background: #f3f3f5; }
 .lang-list.tall { max-height: 330px; overflow-y: auto; }
 .header { background: var(--surface); border-bottom: 1px solid var(--line); }
 .header-in { display: flex; align-items: center; gap: 28px; padding-top: 18px; padding-bottom: 14px; }
-.logo { font-size: 34px; font-weight: 900; letter-spacing: 1px; color: var(--brand); white-space: nowrap; }
+.logo { font-size: 40px; font-weight: 900; letter-spacing: 1px; color: var(--brand); white-space: nowrap; }
 .logo-dot { color: var(--accent); }
-.logo-img { display: block; max-height: 40px; width: auto; object-fit: contain; }
+.logo-img { display: block; max-height: 54px; width: auto; object-fit: contain; }
 .search { flex: 1; display: flex; border: 2px solid var(--brand); border-radius: 999px; overflow: hidden; max-width: 640px; }
 .search input { flex: 1; border: 0; padding: 12px 18px; font-size: 15px; outline: none; background: transparent; color: var(--ink); }
 .search button { border: 0; background: var(--brand); color: #fff; padding: 0 26px; font-weight: 700; }
@@ -173,6 +173,10 @@ body { background: #f3f3f5; }
 .card-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .card-glyph { font-size: 54px; font-weight: 900; color: rgba(255,255,255,.92); text-shadow: 0 4px 18px rgba(0,0,0,.25); }
 .card-tag { position: absolute; top: 10px; inset-inline-start: 10px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
+/* Detail page reuses the card tag's colours as a static chip by the title */
+.detail-tag-row { margin: 0 0 8px; }
+.card-tag.detail-tag { position: static; display: inline-block; }
+.detail-sales { color: var(--muted); font-size: 14px; margin: 6px 0 0; }
 .card-video-badge { position: absolute; bottom: 12px; inset-inline-start: 10px; background: rgba(0,0,0,.55); color: #fff; font-size: 10px; line-height: 1; padding: 5px 7px; border-radius: 999px; pointer-events: none; }
 .site[data-theme='c'] .card-tag { display: none; }
 .card-spectrum { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: linear-gradient(90deg, #f00, #ff7a00, #ffd400, #37d67a, #0090ff, #7a5cff, #ff5fd2); opacity: .35; }
@@ -240,7 +244,7 @@ body { background: #f3f3f5; }
   .detail-grid, .footer-in { grid-template-columns: 1fr; }
   .header-in { flex-wrap: wrap; }
 }
-@media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .grid { grid-template-columns: 1fr; } .logo { font-size: 32px; } .logo-img { max-height: 44px; } }
 
 /* Formula library + company profile pages */
 .formula-page, .profile-page { padding-top: 28px; padding-bottom: 56px; }
