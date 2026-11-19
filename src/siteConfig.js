@@ -5,9 +5,12 @@ import { reactive } from 'vue'
 // fallback defaults when the backend is unavailable.
 export const siteConfig = reactive({
   defaultTheme: 'h', // one of a–h, selected by the admin for all visitors
-  heroTitle: '', // homepage hero headline; empty = the line is not shown
-  heroSubtitle: '', // homepage hero sub-line; empty = the line is not shown
-  announcement: '', // thin notice shown in the top bar when set
+  heroTitle: '', // homepage hero headline (legacy single-language); empty = the line is not shown
+  heroTitleI18n: {}, // hero headline per language ({lang: text}); wins over heroTitle when it has a value
+  heroSubtitle: '', // homepage hero sub-line (legacy single-language); empty = the line is not shown
+  heroSubtitleI18n: {}, // hero sub-line per language ({lang: text})
+  announcement: '', // thin notice shown in the top bar when set (legacy single-language)
+  announcementI18n: {}, // top-bar notice per language ({lang: text})
   showRfq: true, // RFQ panel + section visibility
   showCart: false, // cart buttons/drawer + orders link; hidden unless the admin turns it on (inquiry-site default)
   showPrices: true, // global price switch; false = every product renders as 面议 (no prices, no add-to-cart)
@@ -23,7 +26,8 @@ export const siteConfig = reactive({
   // means "use the built-in theme/i18n default" on the storefront.
   navigationConfigured: false,
   navItems: [], // top navigation [{label, link, type?, categoryId?}]; empty = i18n zone labels
-  heroEyebrow: '', // small line above the hero headline; empty = not shown
+  heroEyebrow: '', // small line above the hero headline (legacy single-language); empty = not shown
+  heroEyebrowI18n: {}, // hero eyebrow per language ({lang: text})
   dealerTitle: '', // dealer (distributor) card title
   dealerText: '', // dealer card body text
   dealerButton: '', // dealer card button label
@@ -60,6 +64,8 @@ export const siteConfig = reactive({
   salesBtnAction: 'contact'
 })
 
+const BOOLEAN_KEYS = new Set(['showRfq', 'showCart', 'showPrices', 'showDealer', 'showContact', 'navigationConfigured'])
+
 function mergeConfig(data) {
   if (!data || typeof data !== 'object') return
   for (const k of Object.keys(siteConfig)) {
@@ -75,6 +81,16 @@ function mergeConfig(data) {
             if (type === 'category' || type === 'anchor' || type === 'external' || type === 'page') item.type = type
             if (i.categoryId !== undefined && i.categoryId !== null && String(i.categoryId) !== '') {
               item.categoryId = String(i.categoryId)
+            }
+            // Multi-language names ({lang: text}): keep string values
+            // only; the nav renderer resolves names[lang] → en → zh →
+            // label.
+            if (i.names && typeof i.names === 'object' && !Array.isArray(i.names)) {
+              const names = {}
+              for (const [code, v] of Object.entries(i.names)) {
+                if (typeof v === 'string' && v.trim()) names[code] = v
+              }
+              if (Object.keys(names).length) item.names = names
             }
             return item
           })
@@ -117,7 +133,8 @@ function mergeConfig(data) {
     // Footer text maps are objects: any object the backend sends wins
     // (an emptied map renders the built-in copy via the tx fallback);
     // a missing/non-object value keeps the default.
-    if (k === 'footerBlurb' || k === 'footerNote' || k === 'footerCopyright' || k === 'searchPlaceholder') {
+    if (k === 'footerBlurb' || k === 'footerNote' || k === 'footerCopyright' || k === 'searchPlaceholder'
+      || k === 'heroTitleI18n' || k === 'heroSubtitleI18n' || k === 'announcementI18n' || k === 'heroEyebrowI18n') {
       if (data[k] && typeof data[k] === 'object' && !Array.isArray(data[k])) siteConfig[k] = data[k]
       continue
     }
@@ -141,6 +158,16 @@ function mergeConfig(data) {
               }))
           }))
       }
+      continue
+    }
+    // Display switches are booleans. Coerce the string forms too: a
+    // "false" string (e.g. from a hand-written pc-config.json) is
+    // truthy in JS and would silently defeat the admin's off switch
+    // (ZenTao #24/#25 hardening) — only real booleans and the exact
+    // strings 'true'/'false' are accepted, anything else is ignored.
+    if (BOOLEAN_KEYS.has(k)) {
+      if (typeof data[k] === 'boolean') siteConfig[k] = data[k]
+      else if (data[k] === 'true' || data[k] === 'false') siteConfig[k] = data[k] === 'true'
       continue
     }
     if (data[k] === undefined || data[k] === null || data[k] === '') continue

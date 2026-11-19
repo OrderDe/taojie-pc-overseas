@@ -83,6 +83,18 @@ export function tx(str) {
   return (dict && dict[str]) || str
 }
 
+// Site-config copy that exists both as a per-language map and as a
+// legacy single-language string (hero title/subtitle/eyebrow, top-bar
+// announcement). Resolution order: map[locale] → map.en → map.zh →
+// the legacy string → '' (the caller applies any theme default).
+export function localizedConfig(map, legacy) {
+  if (map && typeof map === 'object') {
+    const v = map[locale.value] || map.en || map.zh
+    if (typeof v === 'string' && v) return v
+  }
+  return typeof legacy === 'string' ? legacy : ''
+}
+
 export function themeText(key) {
   const per = THEME_TEXT[key] || THEME_TEXT.h
   return per[locale.value] || per.en

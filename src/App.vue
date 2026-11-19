@@ -8,7 +8,7 @@ import ChatWidget from './components/ChatWidget.vue'
 import SocialWidget from './components/SocialWidget.vue'
 import { fetchCategories, fetchKeywords, fetchProducts, fetchProductDetail, fetchBrands, demoBrands, fetchFormulaBrands, fetchFormulaModels, fetchFormulaSearch, fetchFormulaDetail, fetchCustomPage } from './api.js'
 import { siteConfig } from './siteConfig.js'
-import { LANGS, locale, setLocale, t, tx } from './i18n.js'
+import { LANGS, locale, setLocale, t, tx, localizedConfig } from './i18n.js'
 import { CURRENCIES, displayCode, baseCode, isConverted, formatPrice, initFx, setDisplay, currencyForLocale } from './utils/currency.js'
 import { startTracking, trackView, trackClick } from './utils/track.js'
 import { buildChatProduct, saveChatProduct } from './utils/chatProduct.js'
@@ -110,9 +110,14 @@ const cartCount = computed(() => cart.value.reduce((s, i) => s + i.qty, 0))
 const meta = computed(() => THEMES[theme.value])
 // Hero copy comes only from the admin site config — there is no theme
 // default fallback: an empty field hides that line on the storefront.
-const heroTitle = computed(() => siteConfig.heroTitle)
-const heroSub = computed(() => siteConfig.heroSubtitle)
-const heroEyebrow = computed(() => siteConfig.heroEyebrow)
+// Per-language maps win over the legacy single-language fields
+// (localizedConfig: I18n[lang] → I18n.en → I18n.zh → legacy → '').
+const heroTitle = computed(() => localizedConfig(siteConfig.heroTitleI18n, siteConfig.heroTitle))
+const heroSub = computed(() => localizedConfig(siteConfig.heroSubtitleI18n, siteConfig.heroSubtitle))
+const heroEyebrow = computed(() => localizedConfig(siteConfig.heroEyebrowI18n, siteConfig.heroEyebrow))
+// Top-bar announcement: same I18n-first resolution; the built-in
+// i18n announcement remains the theme default when nothing is set.
+const announcementText = computed(() => localizedConfig(siteConfig.announcementI18n, siteConfig.announcement) || t('announcement'))
 // Hero side column: the contact card (showContact, default on — contact
 // details only, no dealer wording), falling back to the dealer card only
 // when the contact card is off and the dealer card is on. (The RFQ form
@@ -217,7 +222,9 @@ const footerCols = computed(() => (siteConfig.footerColumns || [])
     title: tx(c.title),
     links: (c.links || [])
       .map((l) => ({ label: tx(l.labels), item: footerNavItem(l) }))
-      .filter((l) => l.label)
+      // With the RFQ kill-switch off, footer links into the quote
+      // form (#rfq anchors) disappear with every other quote entry.
+      .filter((l) => l.label && (siteConfig.showRfq || !(l.item && l.item.type === 'anchor' && l.item.link === '#rfq')))
   }))
   .filter((c) => c.title || c.links.length))
 
@@ -681,6 +688,10 @@ async function copyWechatId() {
 // owns the attachment state; it also persists locally so the widget
 // still shows the product card when it mounts after this event.
 function requestQuoteChat(p) {
+  // showRfq is the master kill-switch for every quote entry, this
+  // chat-bound one included (its buttons are hidden too — this guard
+  // is the belt-and-braces half, same as openRfqModal's).
+  if (!siteConfig.showRfq) return
   const snapshot = buildChatProduct(p)
   if (!snapshot) return
   trackClick('询价打开聊天')
@@ -751,7 +762,7 @@ onMounted(async () => {
     <!-- Top bar -->
     <div class="topbar">
       <div class="wrap topbar-in">
-        <span class="topbar-left">{{ siteConfig.announcement || t('announcement') }}</span>
+        <span class="topbar-left">{{ announcementText }}</span>
         <span class="topbar-right">
           <a v-if="siteConfig.showCart" href="#" @click.prevent>{{ t('orders') }}</a>
           <a href="#" @click.prevent="openHelpChat">{{ t('help') }}</a>
@@ -903,9 +914,9 @@ onMounted(async () => {
           </table>
           <p v-else class="detail-blurb">{{ t('tdsNote') }}</p>
 
-          <div class="detail-actions" :class="{ 'actions-solo': !siteConfig.showCart }">
+          <div v-if="siteConfig.showCart || siteConfig.showRfq" class="detail-actions" :class="{ 'actions-solo': !siteConfig.showCart }">
             <button v-if="siteConfig.showCart && !selectedNegotiable" class="btn btn-primary" @click="addToCart(selected)">{{ t('addToCart') }}</button>
-            <button class="btn btn-ghost" @click="requestQuoteChat(selected)">{{ t('requestQuote') }}</button>
+            <button v-if="siteConfig.showRfq" class="btn btn-ghost" @click="requestQuoteChat(selected)">{{ t('requestQuote') }}</button>
           </div>
           <p class="trust" v-if="theme === 'b'">{{ t('trustText') }}</p>
         </div>
@@ -1093,7 +1104,7 @@ onMounted(async () => {
             <a v-if="siteConfig.youtube" :href="siteConfig.youtube" target="_blank" rel="noopener">YouTube</a>
             <span v-if="siteConfig.wechat">WeChat: <b>{{ siteConfig.wechat }}</b></span>
           </div>
-          <button class="btn btn-light" @click="requestQuote(null)">{{ t('talkToSales') }}</button>
+          <button v-if="siteConfig.showRfq" class="btn btn-light" @click="requestQuote(null)">{{ t('talkToSales') }}</button>
           </div>
         </section>
       </main>
@@ -1119,7 +1130,7 @@ onMounted(async () => {
         <a v-if="siteConfig.youtube" :href="siteConfig.youtube" target="_blank" rel="noopener">YouTube</a>
         <span v-if="siteConfig.wechat">WeChat: <b>{{ siteConfig.wechat }}</b></span>
       </div>
-      <button class="btn btn-primary" @click="requestQuote(null)">{{ t('talkToSales') }}</button>
+      <button v-if="siteConfig.showRfq" class="btn btn-primary" @click="requestQuote(null)">{{ t('talkToSales') }}</button>
     </main>
 
     <!-- Custom page view (admin-authored standalone page): hero band
@@ -1148,7 +1159,7 @@ onMounted(async () => {
               <p v-if="siteConfig.hotline" class="promo-tel">{{ t('exportHotline') }}<br /><b>{{ siteConfig.hotline }}</b></p>
               <p v-if="siteConfig.whatsapp" class="promo-tel">{{ t('whatsappLabel') }}<br /><b>{{ siteConfig.whatsapp }}</b></p>
               <p v-if="siteConfig.email" class="promo-tel">{{ t('emailLabel') }}<br /><b>{{ siteConfig.email }}</b></p>
-              <button class="btn btn-light" @click="requestQuote(null)">{{ t('talkToSales') }}</button>
+              <button v-if="siteConfig.showRfq" class="btn btn-light" @click="requestQuote(null)">{{ t('talkToSales') }}</button>
             </div>
           </section>
         </main>

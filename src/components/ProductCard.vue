@@ -52,9 +52,9 @@ const unitLabel = computed(() => {
         <span v-if="product.sales">{{ t('sold', { n: product.sales }) }}</span>
         <span v-if="product.moq">{{ t('moqLabel', { n: product.moq }) }}</span>
       </p>
-      <div class="card-actions" :class="{ 'actions-solo': !siteConfig.showCart }" @click.stop>
+      <div v-if="siteConfig.showCart || siteConfig.showRfq" class="card-actions" :class="{ 'actions-solo': !siteConfig.showCart }" @click.stop>
         <button v-if="siteConfig.showCart && !negotiable" class="btn btn-primary btn-sm" @click="$emit('add', product)">{{ t('addToCart') }}</button>
-        <button class="btn btn-ghost btn-sm" @click="$emit('quote', product)">{{ t('requestQuote') }}</button>
+        <button v-if="siteConfig.showRfq" class="btn btn-ghost btn-sm" @click="$emit('quote', product)">{{ t('requestQuote') }}</button>
       </div>
     </div>
   </article>
