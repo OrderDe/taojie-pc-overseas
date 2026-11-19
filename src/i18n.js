@@ -83,6 +83,51 @@ export function tx(str) {
   return (dict && dict[str]) || str
 }
 
+// Spec-row key labels (detail table + theme-D card rows). Product specs
+// are stored as a free-form {key: value} map whose keys arrive in mixed
+// shapes — English ("Place of Origin", "Shelf life"), Chinese (产地、
+// 保质期）, capitalisation/spacing variants — so an exact-match STRINGS
+// lookup misses most of them. Normalise the raw key (trim, collapse
+// spaces, lowercase, drop a trailing colon) and resolve it through the
+// alias table to a MESSAGES concept key; unknown keys fall back to the
+// plain tx() lookup and then to the raw key, so no spec row is ever
+// dropped or blanked. Spec VALUES are not translated by this helper.
+const SPEC_KEY_ALIASES = {
+  'size': 'specSize', 'dimension': 'specSize', 'dimensions': 'specSize', '尺寸': 'specSize',
+  'weight': 'specWeight', '重量': 'specWeight',
+  'net weight': 'specNetWeight', '净重': 'specNetWeight', '淨重': 'specNetWeight',
+  'gross weight': 'specGrossWeight', '毛重': 'specGrossWeight',
+  'color': 'specColor', 'colour': 'specColor', 'colours': 'specColor', 'colors': 'specColor', '颜色': 'specColor', '顏色': 'specColor',
+  'material': 'specMaterial', '材质': 'specMaterial', '材質': 'specMaterial', '材料': 'specMaterial',
+  'ingredients': 'specIngredients', 'ingredient': 'specIngredients', 'composition': 'specIngredients', '成分': 'specIngredients', '组成': 'specIngredients', '組成': 'specIngredients',
+  'shelf life': 'specShelfLife', '保质期': 'specShelfLife', '保質期': 'specShelfLife',
+  'origin': 'specOrigin', 'place of origin': 'specOrigin', '产地': 'specOrigin', '產地': 'specOrigin', '原产地': 'specOrigin',
+  'brand': 'specBrand', 'brand name': 'specBrand', '品牌': 'specBrand',
+  'model': 'specModel', 'model number': 'specModel', 'model no': 'specModel', 'model no.': 'specModel', '型号': 'specModel', '型號': 'specModel',
+  'specification': 'specSpecification', 'specifications': 'specSpecification', 'spec': 'specSpecification', '规格': 'specSpecification', '規格': 'specSpecification',
+  'packaging': 'specPackaging', 'package': 'specPackaging', 'packing': 'specPackaging', '包装': 'specPackaging', '包裝': 'specPackaging',
+  'capacity': 'specCapacity', '容量': 'specCapacity',
+  'volume': 'specVolume', '体积': 'specVolume', '體積': 'specVolume', '容积': 'specVolume',
+  'application': 'specApplication', 'application scope': 'specApplication', 'usage': 'specApplication', '适用范围': 'specApplication', '適用範圍': 'specApplication', '用途': 'specApplication',
+  'viscosity': 'specViscosity', '粘度': 'specViscosity', '黏度': 'specViscosity',
+  'gloss': 'specGloss', 'glossiness': 'specGloss', '光泽': 'specGloss', '光澤': 'specGloss',
+  'solid content': 'specSolidContent', 'solids content': 'specSolidContent', 'solid contents': 'specSolidContent', '固含量': 'specSolidContent', '固体含量': 'specSolidContent',
+  'dilution': 'specDilution', 'dilution ratio': 'specDilution', 'dilution rate': 'specDilution', '稀释比例': 'specDilution', '稀釋比例': 'specDilution', '稀释比': 'specDilution',
+  'application method': 'specApplicationMethod', 'construction method': 'specApplicationMethod', 'construction methods': 'specApplicationMethod', '施工方式': 'specApplicationMethod', '施工方法': 'specApplicationMethod',
+  'storage': 'specStorage', 'storage conditions': 'specStorage', '储存': 'specStorage', '存储': 'specStorage', '存放': 'specStorage',
+  'quantity': 'specQuantity', 'qty': 'specQuantity', '数量': 'specQuantity', '數量': 'specQuantity',
+  'unit': 'specUnit', 'units': 'specUnit', '单位': 'specUnit', '單位': 'specUnit',
+  'mix ratio': 'specMixRatio', 'mixing ratio': 'specMixRatio', '混合比': 'specMixRatio', '配比': 'specMixRatio'
+}
+
+export function specKeyLabel(raw) {
+  if (typeof raw !== 'string' || !raw) return raw
+  const norm = raw.trim().toLowerCase().replace(/\s+/g, ' ').replace(/[:：]+$/, '').trim()
+  const key = SPEC_KEY_ALIASES[norm]
+  if (key) return t(key)
+  return tx(raw)
+}
+
 // Site-config copy that exists both as a per-language map and as a
 // legacy single-language string (hero title/subtitle/eyebrow, top-bar
 // announcement). Resolution order: map[locale] → map.en → map.zh →
@@ -102,6 +147,9 @@ export function themeText(key) {
 
 const MESSAGES = {
   en: {
+    specSize: 'Size', specWeight: 'Weight', specNetWeight: 'Net Weight', specGrossWeight: 'Gross Weight', specColor: 'Color', specMaterial: 'Material', specIngredients: 'Ingredients', specShelfLife: 'Shelf Life', specOrigin: 'Origin', specBrand: 'Brand', specModel: 'Model', specSpecification: 'Specification', specPackaging: 'Packaging', specCapacity: 'Capacity', specVolume: 'Volume', specApplication: 'Application', specViscosity: 'Viscosity', specGloss: 'Gloss', specSolidContent: 'Solid Content', specDilution: 'Dilution Ratio', specApplicationMethod: 'Application Method', specStorage: 'Storage', specQuantity: 'Quantity', specUnit: 'Unit',
+    specMixRatio: 'Mix Ratio',
+    rfqNameRequired: 'Please enter your name', rfqContactRequired: 'Please enter your email or WhatsApp',
     announcement: 'Taojie Overseas · Ships worldwide from Guangzhou',
     signIn: 'Sign In', orders: 'Orders', help: 'Help', theme: 'Theme',
     searchPh: 'Search clear coat, primer, pearl, tissue…', search: 'Search', cart: 'Cart',
@@ -154,6 +202,9 @@ const MESSAGES = {
     chatTyping: 'Support is typing…'
   },
   zh: {
+    specSize: '尺寸', specWeight: '重量', specNetWeight: '净重', specGrossWeight: '毛重', specColor: '颜色', specMaterial: '材质', specIngredients: '成分', specShelfLife: '保质期', specOrigin: '产地', specBrand: '品牌', specModel: '型号', specSpecification: '规格', specPackaging: '包装', specCapacity: '容量', specVolume: '体积', specApplication: '适用范围', specViscosity: '粘度', specGloss: '光泽', specSolidContent: '固含量', specDilution: '稀释比例', specApplicationMethod: '施工方式', specStorage: '储存', specQuantity: '数量', specUnit: '单位',
+    specMixRatio: '混合比',
+    rfqNameRequired: '请填写您的姓名', rfqContactRequired: '请填写邮箱或 WhatsApp',
     announcement: '淘街海外站 · 从广州发货，配送全球',
     signIn: '登录', orders: '订单', help: '帮助', theme: '主题',
     searchPh: '搜索清漆、底漆、珠光、抽纸…', search: '搜索', cart: '购物车',
@@ -206,6 +257,9 @@ const MESSAGES = {
     chatTyping: '客服正在输入…'
   },
   es: {
+    specSize: 'Tamaño', specWeight: 'Peso', specNetWeight: 'Peso neto', specGrossWeight: 'Peso bruto', specColor: 'Color', specMaterial: 'Material', specIngredients: 'Ingredientes', specShelfLife: 'Vida útil', specOrigin: 'Origen', specBrand: 'Marca', specModel: 'Modelo', specSpecification: 'Especificación', specPackaging: 'Embalaje', specCapacity: 'Capacidad', specVolume: 'Volumen', specApplication: 'Aplicación', specViscosity: 'Viscosidad', specGloss: 'Brillo', specSolidContent: 'Contenido de sólidos', specDilution: 'Proporción de dilución', specApplicationMethod: 'Método de aplicación', specStorage: 'Almacenamiento', specQuantity: 'Cantidad', specUnit: 'Unidad',
+    specMixRatio: 'Proporción de mezcla',
+    rfqNameRequired: 'Introduce tu nombre', rfqContactRequired: 'Introduce tu correo o WhatsApp',
     announcement: 'Taojie Internacional · Envíos a todo el mundo desde Guangzhou',
     signIn: 'Iniciar sesión', orders: 'Pedidos', help: 'Ayuda', theme: 'Tema',
     searchPh: 'Busca barniz, imprimación, perla, pañuelos…', search: 'Buscar', cart: 'Carrito',
@@ -258,6 +312,9 @@ const MESSAGES = {
     chatTyping: 'El soporte está escribiendo…'
   },
   fr: {
+    specSize: 'Dimensions', specWeight: 'Poids', specNetWeight: 'Poids net', specGrossWeight: 'Poids brut', specColor: 'Couleur', specMaterial: 'Matériau', specIngredients: 'Ingrédients', specShelfLife: 'Durée de conservation', specOrigin: 'Origine', specBrand: 'Marque', specModel: 'Modèle', specSpecification: 'Spécification', specPackaging: 'Emballage', specCapacity: 'Capacité', specVolume: 'Volume', specApplication: 'Application', specViscosity: 'Viscosité', specGloss: 'Brillance', specSolidContent: 'Teneur en solides', specDilution: 'Taux de dilution', specApplicationMethod: "Méthode d'application", specStorage: 'Stockage', specQuantity: 'Quantité', specUnit: 'Unité',
+    specMixRatio: 'Ratio de mélange',
+    rfqNameRequired: 'Veuillez saisir votre nom', rfqContactRequired: 'Veuillez saisir votre e-mail ou WhatsApp',
     announcement: 'Taojie International · Expédition mondiale depuis Guangzhou',
     signIn: 'Se connecter', orders: 'Commandes', help: 'Aide', theme: 'Thème',
     searchPh: 'Rechercher vernis, apprêt, nacre, mouchoirs…', search: 'Rechercher', cart: 'Panier',
@@ -310,6 +367,9 @@ const MESSAGES = {
     chatTyping: 'L’assistance est en train d’écrire…'
   },
   pt: {
+    specSize: 'Tamanho', specWeight: 'Peso', specNetWeight: 'Peso líquido', specGrossWeight: 'Peso bruto', specColor: 'Cor', specMaterial: 'Material', specIngredients: 'Ingredientes', specShelfLife: 'Prazo de validade', specOrigin: 'Origem', specBrand: 'Marca', specModel: 'Modelo', specSpecification: 'Especificação', specPackaging: 'Embalagem', specCapacity: 'Capacidade', specVolume: 'Volume', specApplication: 'Aplicação', specViscosity: 'Viscosidade', specGloss: 'Brilho', specSolidContent: 'Teor de sólidos', specDilution: 'Proporção de diluição', specApplicationMethod: 'Método de aplicação', specStorage: 'Armazenamento', specQuantity: 'Quantidade', specUnit: 'Unidade',
+    specMixRatio: 'Proporção de mistura',
+    rfqNameRequired: 'Informe seu nome', rfqContactRequired: 'Informe seu e-mail ou WhatsApp',
     announcement: 'Taojie Internacional · Enviamos de Guangzhou para o mundo todo',
     signIn: 'Entrar', orders: 'Pedidos', help: 'Ajuda', theme: 'Tema',
     searchPh: 'Busque verniz, primário, pérola, lenço…', search: 'Buscar', cart: 'Carrinho',
@@ -362,6 +422,9 @@ const MESSAGES = {
     chatTyping: 'O suporte está digitando…'
   },
   id: {
+    specSize: 'Ukuran', specWeight: 'Berat', specNetWeight: 'Berat Bersih', specGrossWeight: 'Berat Kotor', specColor: 'Warna', specMaterial: 'Bahan', specIngredients: 'Komposisi', specShelfLife: 'Masa Simpan', specOrigin: 'Asal', specBrand: 'Merek', specModel: 'Model', specSpecification: 'Spesifikasi', specPackaging: 'Kemasan', specCapacity: 'Kapasitas', specVolume: 'Volume', specApplication: 'Aplikasi', specViscosity: 'Viskositas', specGloss: 'Kilap', specSolidContent: 'Kadar Padatan', specDilution: 'Rasio Pengenceran', specApplicationMethod: 'Metode Aplikasi', specStorage: 'Penyimpanan', specQuantity: 'Jumlah', specUnit: 'Satuan',
+    specMixRatio: 'Rasio campuran',
+    rfqNameRequired: 'Isi nama Anda', rfqContactRequired: 'Isi email atau WhatsApp Anda',
     announcement: 'Taojie Internasional · Kirim ke seluruh dunia dari Guangzhou',
     signIn: 'Masuk', orders: 'Pesanan', help: 'Bantuan', theme: 'Tema',
     searchPh: 'Cari clear coat, primer, mutiara, tisu…', search: 'Cari', cart: 'Keranjang',
@@ -414,6 +477,9 @@ const MESSAGES = {
     chatTyping: 'Dukungan sedang mengetik…'
   },
   ms: {
+    specSize: 'Saiz', specWeight: 'Berat', specNetWeight: 'Berat Bersih', specGrossWeight: 'Berat Kasar', specColor: 'Warna', specMaterial: 'Bahan', specIngredients: 'Kandungan', specShelfLife: 'Jangka Hayat', specOrigin: 'Asal', specBrand: 'Jenama', specModel: 'Model', specSpecification: 'Spesifikasi', specPackaging: 'Pembungkusan', specCapacity: 'Kapasiti', specVolume: 'Isi Padu', specApplication: 'Aplikasi', specViscosity: 'Kelikatan', specGloss: 'Kilauan', specSolidContent: 'Kandungan Pepejal', specDilution: 'Nisbah Pencairan', specApplicationMethod: 'Kaedah Penggunaan', specStorage: 'Penyimpanan', specQuantity: 'Kuantiti', specUnit: 'Unit',
+    specMixRatio: 'Nisbah campuran',
+    rfqNameRequired: 'Sila isi nama anda', rfqContactRequired: 'Sila isi e-mel atau WhatsApp anda',
     announcement: 'Taojie Antarabangsa · Penghantaran ke seluruh dunia dari Guangzhou',
     signIn: 'Log Masuk', orders: 'Pesanan', help: 'Bantuan', theme: 'Tema',
     searchPh: 'Cari clear coat, primer, mutiara, tisu…', search: 'Cari', cart: 'Troli',
@@ -466,6 +532,9 @@ const MESSAGES = {
     chatTyping: 'Sokongan sedang menaip…'
   },
   vi: {
+    specSize: 'Kích thước', specWeight: 'Trọng lượng', specNetWeight: 'Trọng lượng tịnh', specGrossWeight: 'Tổng trọng lượng', specColor: 'Màu sắc', specMaterial: 'Chất liệu', specIngredients: 'Thành phần', specShelfLife: 'Hạn sử dụng', specOrigin: 'Xuất xứ', specBrand: 'Thương hiệu', specModel: 'Mẫu mã', specSpecification: 'Quy cách', specPackaging: 'Bao bì', specCapacity: 'Dung tích', specVolume: 'Thể tích', specApplication: 'Phạm vi ứng dụng', specViscosity: 'Độ nhớt', specGloss: 'Độ bóng', specSolidContent: 'Hàm lượng rắn', specDilution: 'Tỷ lệ pha loãng', specApplicationMethod: 'Phương pháp thi công', specStorage: 'Bảo quản', specQuantity: 'Số lượng', specUnit: 'Đơn vị',
+    specMixRatio: 'Tỉ lệ pha',
+    rfqNameRequired: 'Vui lòng nhập tên của bạn', rfqContactRequired: 'Vui lòng nhập email hoặc WhatsApp của bạn',
     announcement: 'Taojie Quốc tế · Giao hàng toàn cầu từ Quảng Châu',
     signIn: 'Đăng nhập', orders: 'Đơn hàng', help: 'Trợ giúp', theme: 'Giao diện',
     searchPh: 'Tìm sơn bóng, sơn lót, ngọc trai, giấy ăn…', search: 'Tìm kiếm', cart: 'Giỏ hàng',
@@ -518,6 +587,9 @@ const MESSAGES = {
     chatTyping: 'Hỗ trợ đang nhập…'
   },
   th: {
+    specSize: 'ขนาด', specWeight: 'น้ำหนัก', specNetWeight: 'น้ำหนักสุทธิ', specGrossWeight: 'น้ำหนักรวม', specColor: 'สี', specMaterial: 'วัสดุ', specIngredients: 'ส่วนผสม', specShelfLife: 'อายุการเก็บรักษา', specOrigin: 'แหล่งกำเนิด', specBrand: 'แบรนด์', specModel: 'รุ่น', specSpecification: 'ข้อมูลจำเพาะ', specPackaging: 'บรรจุภัณฑ์', specCapacity: 'ความจุ', specVolume: 'ปริมาตร', specApplication: 'การใช้งาน', specViscosity: 'ความหนืด', specGloss: 'ความเงา', specSolidContent: 'ปริมาณของแข็ง', specDilution: 'อัตราส่วนการเจือจาง', specApplicationMethod: 'วิธีการใช้งาน', specStorage: 'การจัดเก็บ', specQuantity: 'จำนวน', specUnit: 'หน่วย',
+    specMixRatio: 'อัตราส่วนผสม',
+    rfqNameRequired: 'กรุณากรอกชื่อของคุณ', rfqContactRequired: 'กรุณากรอกอีเมลหรือ WhatsApp ของคุณ',
     announcement: 'Taojie ต่างประเทศ · จัดส่งทั่วโลกจากกว่างโจว',
     signIn: 'เข้าสู่ระบบ', orders: 'คำสั่งซื้อ', help: 'ช่วยเหลือ', theme: 'ธีม',
     searchPh: 'ค้นหาเคลียร์โค้ท, สีรองพื้น, ไข่มุก, กระดาษทิชชู…', search: 'ค้นหา', cart: 'ตะกร้า',
@@ -570,6 +642,9 @@ const MESSAGES = {
     chatTyping: 'ฝ่ายสนับสนุนกำลังพิมพ์…'
   },
   ar: {
+    specSize: 'المقاس', specWeight: 'الوزن', specNetWeight: 'الوزن الصافي', specGrossWeight: 'الوزن الإجمالي', specColor: 'اللون', specMaterial: 'المادة', specIngredients: 'المكونات', specShelfLife: 'مدة الصلاحية', specOrigin: 'المنشأ', specBrand: 'العلامة التجارية', specModel: 'الطراز', specSpecification: 'المواصفات', specPackaging: 'التغليف', specCapacity: 'السعة', specVolume: 'الحجم', specApplication: 'الاستخدام', specViscosity: 'اللزوجة', specGloss: 'اللمعان', specSolidContent: 'المحتوى الصلب', specDilution: 'نسبة التخفيف', specApplicationMethod: 'طريقة الاستخدام', specStorage: 'التخزين', specQuantity: 'الكمية', specUnit: 'الوحدة',
+    specMixRatio: 'نسبة الخلط',
+    rfqNameRequired: 'يرجى إدخال اسمك', rfqContactRequired: 'يرجى إدخال بريدك الإلكتروني أو واتساب',
     announcement: 'تاوجيه الدولية · شحن إلى جميع أنحاء العالم من غوانغتشو',
     signIn: 'تسجيل الدخول', orders: 'الطلبات', help: 'مساعدة', theme: 'المظهر',
     searchPh: 'ابحث عن ورنيش شفاف، برايمر، لؤلؤ، مناديل…', search: 'بحث', cart: 'السلة',
@@ -622,6 +697,9 @@ const MESSAGES = {
     chatTyping: 'الدعم يكتب الآن…'
   },
   ru: {
+    specSize: 'Размер', specWeight: 'Вес', specNetWeight: 'Вес нетто', specGrossWeight: 'Вес брутто', specColor: 'Цвет', specMaterial: 'Материал', specIngredients: 'Состав', specShelfLife: 'Срок годности', specOrigin: 'Происхождение', specBrand: 'Бренд', specModel: 'Модель', specSpecification: 'Спецификация', specPackaging: 'Упаковка', specCapacity: 'Ёмкость', specVolume: 'Объём', specApplication: 'Применение', specViscosity: 'Вязкость', specGloss: 'Глянец', specSolidContent: 'Содержание твёрдых веществ', specDilution: 'Степень разбавления', specApplicationMethod: 'Способ нанесения', specStorage: 'Хранение', specQuantity: 'Количество', specUnit: 'Единица',
+    specMixRatio: 'Пропорция смешивания',
+    rfqNameRequired: 'Укажите ваше имя', rfqContactRequired: 'Укажите e-mail или WhatsApp',
     announcement: 'Taojie International · Доставка по всему миру из Гуанчжоу',
     signIn: 'Войти', orders: 'Заказы', help: 'Помощь', theme: 'Тема',
     searchPh: 'Поиск: лак, грунт, перламутр, салфетки…', search: 'Поиск', cart: 'Корзина',
@@ -674,6 +752,9 @@ const MESSAGES = {
     chatTyping: 'Поддержка печатает…'
   },
   de: {
+    specSize: 'Größe', specWeight: 'Gewicht', specNetWeight: 'Nettogewicht', specGrossWeight: 'Bruttogewicht', specColor: 'Farbe', specMaterial: 'Material', specIngredients: 'Inhaltsstoffe', specShelfLife: 'Haltbarkeit', specOrigin: 'Herkunft', specBrand: 'Marke', specModel: 'Modell', specSpecification: 'Spezifikation', specPackaging: 'Verpackung', specCapacity: 'Fassungsvermögen', specVolume: 'Volumen', specApplication: 'Anwendung', specViscosity: 'Viskosität', specGloss: 'Glanz', specSolidContent: 'Festkörpergehalt', specDilution: 'Verdünnungsverhältnis', specApplicationMethod: 'Verarbeitungsmethode', specStorage: 'Lagerung', specQuantity: 'Menge', specUnit: 'Einheit',
+    specMixRatio: 'Mischverhältnis',
+    rfqNameRequired: 'Bitte geben Sie Ihren Namen ein', rfqContactRequired: 'Bitte geben Sie Ihre E-Mail oder WhatsApp ein',
     announcement: 'Taojie International · Weltweiter Versand ab Guangzhou',
     signIn: 'Anmelden', orders: 'Bestellungen', help: 'Hilfe', theme: 'Design',
     searchPh: 'Klarlack, Grundierung, Perleffekt, Tücher suchen…', search: 'Suchen', cart: 'Warenkorb',

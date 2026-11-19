@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { t, tx } from '../i18n.js'
+import { t, tx, specKeyLabel } from '../i18n.js'
 import { siteConfig } from '../siteConfig.js'
 import { formatPrice } from '../utils/currency.js'
 import { showAsNegotiable } from '../utils/pricing.js'
@@ -30,7 +30,7 @@ const unitLabel = computed(() => {
 
       <!-- Theme D: spec rows on the card -->
       <ul v-if="theme === 'd' && product.specs && Object.keys(product.specs).length" class="card-specs">
-        <li v-for="(v, k) in Object.entries(product.specs).slice(0, 2)" :key="k"><span>{{ tx(k) }}</span><b>{{ tx(v) }}</b></li>
+        <li v-for="(v, k) in Object.entries(product.specs).slice(0, 2)" :key="k"><span>{{ specKeyLabel(k) }}</span><b>{{ tx(v) }}</b></li>
       </ul>
 
       <!-- Theme G: tiered pricing (numeric tiers make no sense for 面议 goods) -->

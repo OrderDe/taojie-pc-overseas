@@ -116,6 +116,8 @@ body { background: #f3f3f5; }
 .rfq h3 { margin: 0 0 4px; font-size: 20px; } .rfq-sub { color: var(--muted); margin: 0 0 14px; font-size: 14px; }
 .rfq form { display: grid; gap: 10px; }
 .rfq input, .rfq textarea { border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; font: inherit; font-size: 14px; width: 100%; background: #fff; color: #141414; }
+.rfq-field { display: grid; gap: 6px; }
+.rfq-error { margin: 0; color: #c22727; font-size: 12.5px; }
 .rfq-done { background: #eefaf0; border: 1px solid #bfe6c8; border-radius: 10px; padding: 14px; color: #17351d; }
 /* Nav anchor targets: a little breathing room above the scrolled-to block */
 #catalogue, #story, #dealer { scroll-margin-top: 16px; }

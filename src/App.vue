@@ -8,7 +8,7 @@ import ChatWidget from './components/ChatWidget.vue'
 import SocialWidget from './components/SocialWidget.vue'
 import { fetchCategories, fetchKeywords, fetchProducts, fetchProductDetail, fetchBrands, demoBrands, fetchFormulaBrands, fetchFormulaModels, fetchFormulaSearch, fetchFormulaDetail, fetchCustomPage } from './api.js'
 import { siteConfig } from './siteConfig.js'
-import { LANGS, locale, setLocale, t, tx, localizedConfig } from './i18n.js'
+import { LANGS, locale, setLocale, t, tx, localizedConfig, specKeyLabel } from './i18n.js'
 import { CURRENCIES, displayCode, baseCode, isConverted, formatPrice, initFx, setDisplay, currencyForLocale } from './utils/currency.js'
 import { startTracking, trackView, trackClick } from './utils/track.js'
 import { buildChatProduct, saveChatProduct } from './utils/chatProduct.js'
@@ -910,7 +910,7 @@ onMounted(async () => {
           </div>
 
           <table v-if="selected.specs && Object.keys(selected.specs).length" class="spec-table">
-            <tr v-for="(v, k) in selected.specs" :key="k"><th>{{ tx(k) }}</th><td>{{ tx(v) }}</td></tr>
+            <tr v-for="(v, k) in selected.specs" :key="k"><th>{{ specKeyLabel(k) }}</th><td>{{ tx(v) }}</td></tr>
           </table>
           <p v-else class="detail-blurb">{{ t('tdsNote') }}</p>
 
