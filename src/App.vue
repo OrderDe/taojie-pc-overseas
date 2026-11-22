@@ -904,6 +904,9 @@ onMounted(async () => {
             </template></p>
           <p v-if="isConverted && !selectedNegotiable" class="fx-note">{{ t('fxNote', { base: baseCode }) }}</p>
           <p v-if="selected.sales" class="detail-sales">{{ t('sold', { n: selected.sales }) }}</p>
+          <!-- Bug #4: negotiable goods have no price line to hang the unit
+               on; show 单位 on its own line instead. -->
+          <p v-if="selectedNegotiable && selected.unit && String(selected.unit).trim() && String(selected.unit).trim() !== '无'" class="detail-sales">{{ t('specUnit') }}: {{ tx(selected.unit) }}</p>
           <p v-if="selected.blurb" class="detail-blurb">{{ tx(selected.blurb) }}</p>
 
           <div v-if="selected.moq && !selectedNegotiable" class="detail-tiers">

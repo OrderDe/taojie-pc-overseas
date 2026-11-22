@@ -51,6 +51,9 @@ const unitLabel = computed(() => {
       <p class="card-meta">
         <span v-if="product.sales">{{ t('sold', { n: product.sales }) }}</span>
         <span v-if="product.moq">{{ t('moqLabel', { n: product.moq }) }}</span>
+        <!-- Bug #4: for negotiable goods the unit used to vanish with the
+             price; show it in the meta row so 单位 is always visible. -->
+        <span v-if="negotiable && unitLabel">{{ t('specUnit') }}: {{ tx(unitLabel) }}</span>
       </p>
       <div v-if="siteConfig.showCart || siteConfig.showRfq" class="card-actions" :class="{ 'actions-solo': !siteConfig.showCart }" @click.stop>
         <button v-if="siteConfig.showCart && !negotiable" class="btn btn-primary btn-sm" @click="$emit('add', product)">{{ t('addToCart') }}</button>

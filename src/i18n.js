@@ -117,7 +117,25 @@ const SPEC_KEY_ALIASES = {
   'storage': 'specStorage', 'storage conditions': 'specStorage', '储存': 'specStorage', '存储': 'specStorage', '存放': 'specStorage',
   'quantity': 'specQuantity', 'qty': 'specQuantity', '数量': 'specQuantity', '數量': 'specQuantity',
   'unit': 'specUnit', 'units': 'specUnit', '单位': 'specUnit', '單位': 'specUnit',
-  'mix ratio': 'specMixRatio', 'mixing ratio': 'specMixRatio', '混合比': 'specMixRatio', '配比': 'specMixRatio'
+  'mix ratio': 'specMixRatio', 'mixing ratio': 'specMixRatio', '混合比': 'specMixRatio', '配比': 'specMixRatio',
+  'mf': 'specMF',
+  'name': 'specProductName', 'product name': 'specProductName', '产品名称': 'specProductName',
+  'type': 'specType', '类型': 'specType',
+  'state': 'specState', '状态': 'specState',
+  'sample': 'specSample', '样品': 'specSample',
+  'other names': 'specOtherNames', '其他名称': 'specOtherNames',
+  'main raw material': 'specMainRawMaterial', '主要原料': 'specMainRawMaterial',
+  'customization options': 'specCustomization', 'customisation options': 'specCustomization', '定制选项': 'specCustomization',
+  'packaging and delivery': 'specPackagingDelivery', '包装与交付': 'specPackagingDelivery',
+  'einecs no.': 'specEinecsNo', 'einecs no': 'specEinecsNo',
+  'cas no.': 'specCasNo', 'cas no': 'specCasNo',
+  'service': 'specService', '服务': 'specService',
+  'features': 'specFeatures', 'feature': 'specFeatures', '特点': 'specFeatures',
+  'construction tool': 'specConstructionTool', '施工工具': 'specConstructionTool',
+  'scope of use': 'specApplication', '产品用途': 'specApplication',
+  '发货地': 'specShipFrom',
+  '储存方式': 'specStorage',
+  '保质期（天）': 'specShelfLife', '保质期(天)': 'specShelfLife'
 }
 
 export function specKeyLabel(raw) {
@@ -125,6 +143,12 @@ export function specKeyLabel(raw) {
   const norm = raw.trim().toLowerCase().replace(/\s+/g, ' ').replace(/[:：]+$/, '').trim()
   const key = SPEC_KEY_ALIASES[norm]
   if (key) return t(key)
+  // Keys like '保质期（天）' carry a unit suffix in brackets: retry without it.
+  const stripped = norm.replace(/[（(][^（）()]*[）)]\s*$/, '').trim()
+  if (stripped && stripped !== norm) {
+    const k2 = SPEC_KEY_ALIASES[stripped]
+    if (k2) return t(k2)
+  }
   return tx(raw)
 }
 
@@ -149,6 +173,7 @@ const MESSAGES = {
   en: {
     specSize: 'Size', specWeight: 'Weight', specNetWeight: 'Net Weight', specGrossWeight: 'Gross Weight', specColor: 'Color', specMaterial: 'Material', specIngredients: 'Ingredients', specShelfLife: 'Shelf Life', specOrigin: 'Origin', specBrand: 'Brand', specModel: 'Model', specSpecification: 'Specification', specPackaging: 'Packaging', specCapacity: 'Capacity', specVolume: 'Volume', specApplication: 'Application', specViscosity: 'Viscosity', specGloss: 'Gloss', specSolidContent: 'Solid Content', specDilution: 'Dilution Ratio', specApplicationMethod: 'Application Method', specStorage: 'Storage', specQuantity: 'Quantity', specUnit: 'Unit',
     specMixRatio: 'Mix Ratio',
+    specProductName: 'Product Name', specType: 'Type', specState: 'State', specSample: 'Sample', specOtherNames: 'Other Names', specMainRawMaterial: 'Main Raw Material', specCustomization: 'Customization Options', specPackagingDelivery: 'Packaging & Delivery', specEinecsNo: 'EINECS No.', specCasNo: 'CAS No.', specService: 'Service', specFeatures: 'Features', specShipFrom: 'Ships From', specConstructionTool: 'Construction Tool', specMF: 'MF',
     rfqNameRequired: 'Please enter your name', rfqContactRequired: 'Please enter your email or WhatsApp',
     announcement: 'Taojie Overseas · Ships worldwide from Guangzhou',
     signIn: 'Sign In', orders: 'Orders', help: 'Help', theme: 'Theme',
@@ -204,6 +229,7 @@ const MESSAGES = {
   zh: {
     specSize: '尺寸', specWeight: '重量', specNetWeight: '净重', specGrossWeight: '毛重', specColor: '颜色', specMaterial: '材质', specIngredients: '成分', specShelfLife: '保质期', specOrigin: '产地', specBrand: '品牌', specModel: '型号', specSpecification: '规格', specPackaging: '包装', specCapacity: '容量', specVolume: '体积', specApplication: '适用范围', specViscosity: '粘度', specGloss: '光泽', specSolidContent: '固含量', specDilution: '稀释比例', specApplicationMethod: '施工方式', specStorage: '储存', specQuantity: '数量', specUnit: '单位',
     specMixRatio: '混合比',
+    specProductName: '产品名称', specType: '类型', specState: '状态', specSample: '样品', specOtherNames: '其他名称', specMainRawMaterial: '主要原料', specCustomization: '定制选项', specPackagingDelivery: '包装与交付', specEinecsNo: 'EINECS编号', specCasNo: 'CAS编号', specService: '服务', specFeatures: '特点', specShipFrom: '发货地', specConstructionTool: '施工工具', specMF: '分子式',
     rfqNameRequired: '请填写您的姓名', rfqContactRequired: '请填写邮箱或 WhatsApp',
     announcement: '淘街海外站 · 从广州发货，配送全球',
     signIn: '登录', orders: '订单', help: '帮助', theme: '主题',
@@ -259,6 +285,7 @@ const MESSAGES = {
   es: {
     specSize: 'Tamaño', specWeight: 'Peso', specNetWeight: 'Peso neto', specGrossWeight: 'Peso bruto', specColor: 'Color', specMaterial: 'Material', specIngredients: 'Ingredientes', specShelfLife: 'Vida útil', specOrigin: 'Origen', specBrand: 'Marca', specModel: 'Modelo', specSpecification: 'Especificación', specPackaging: 'Embalaje', specCapacity: 'Capacidad', specVolume: 'Volumen', specApplication: 'Aplicación', specViscosity: 'Viscosidad', specGloss: 'Brillo', specSolidContent: 'Contenido de sólidos', specDilution: 'Proporción de dilución', specApplicationMethod: 'Método de aplicación', specStorage: 'Almacenamiento', specQuantity: 'Cantidad', specUnit: 'Unidad',
     specMixRatio: 'Proporción de mezcla',
+    specProductName: 'Nombre del producto', specType: 'Tipo', specState: 'Estado', specSample: 'Muestra', specOtherNames: 'Otros nombres', specMainRawMaterial: 'Materia prima principal', specCustomization: 'Opciones de personalización', specPackagingDelivery: 'Embalaje y entrega', specEinecsNo: 'N.º EINECS', specCasNo: 'N.º CAS', specService: 'Servicio', specFeatures: 'Características', specShipFrom: 'Envío desde', specConstructionTool: 'Herramienta de aplicación', specMF: 'Fórmula molecular',
     rfqNameRequired: 'Introduce tu nombre', rfqContactRequired: 'Introduce tu correo o WhatsApp',
     announcement: 'Taojie Internacional · Envíos a todo el mundo desde Guangzhou',
     signIn: 'Iniciar sesión', orders: 'Pedidos', help: 'Ayuda', theme: 'Tema',
@@ -314,6 +341,7 @@ const MESSAGES = {
   fr: {
     specSize: 'Dimensions', specWeight: 'Poids', specNetWeight: 'Poids net', specGrossWeight: 'Poids brut', specColor: 'Couleur', specMaterial: 'Matériau', specIngredients: 'Ingrédients', specShelfLife: 'Durée de conservation', specOrigin: 'Origine', specBrand: 'Marque', specModel: 'Modèle', specSpecification: 'Spécification', specPackaging: 'Emballage', specCapacity: 'Capacité', specVolume: 'Volume', specApplication: 'Application', specViscosity: 'Viscosité', specGloss: 'Brillance', specSolidContent: 'Teneur en solides', specDilution: 'Taux de dilution', specApplicationMethod: "Méthode d'application", specStorage: 'Stockage', specQuantity: 'Quantité', specUnit: 'Unité',
     specMixRatio: 'Ratio de mélange',
+    specProductName: 'Nom du produit', specType: 'Type', specState: 'État', specSample: 'Échantillon', specOtherNames: 'Autres noms', specMainRawMaterial: 'Matière première principale', specCustomization: 'Options de personnalisation', specPackagingDelivery: 'Emballage et livraison', specEinecsNo: 'N° EINECS', specCasNo: 'N° CAS', specService: 'Service', specFeatures: 'Caractéristiques', specShipFrom: 'Expédié depuis', specConstructionTool: "Outil d'application", specMF: 'Formule moléculaire',
     rfqNameRequired: 'Veuillez saisir votre nom', rfqContactRequired: 'Veuillez saisir votre e-mail ou WhatsApp',
     announcement: 'Taojie International · Expédition mondiale depuis Guangzhou',
     signIn: 'Se connecter', orders: 'Commandes', help: 'Aide', theme: 'Thème',
@@ -369,6 +397,7 @@ const MESSAGES = {
   pt: {
     specSize: 'Tamanho', specWeight: 'Peso', specNetWeight: 'Peso líquido', specGrossWeight: 'Peso bruto', specColor: 'Cor', specMaterial: 'Material', specIngredients: 'Ingredientes', specShelfLife: 'Prazo de validade', specOrigin: 'Origem', specBrand: 'Marca', specModel: 'Modelo', specSpecification: 'Especificação', specPackaging: 'Embalagem', specCapacity: 'Capacidade', specVolume: 'Volume', specApplication: 'Aplicação', specViscosity: 'Viscosidade', specGloss: 'Brilho', specSolidContent: 'Teor de sólidos', specDilution: 'Proporção de diluição', specApplicationMethod: 'Método de aplicação', specStorage: 'Armazenamento', specQuantity: 'Quantidade', specUnit: 'Unidade',
     specMixRatio: 'Proporção de mistura',
+    specProductName: 'Nome do produto', specType: 'Tipo', specState: 'Estado', specSample: 'Amostra', specOtherNames: 'Outros nomes', specMainRawMaterial: 'Matéria-prima principal', specCustomization: 'Opções de personalização', specPackagingDelivery: 'Embalagem e entrega', specEinecsNo: 'N.º EINECS', specCasNo: 'N.º CAS', specService: 'Serviço', specFeatures: 'Características', specShipFrom: 'Envio de', specConstructionTool: 'Ferramenta de aplicação', specMF: 'Fórmula molecular',
     rfqNameRequired: 'Informe seu nome', rfqContactRequired: 'Informe seu e-mail ou WhatsApp',
     announcement: 'Taojie Internacional · Enviamos de Guangzhou para o mundo todo',
     signIn: 'Entrar', orders: 'Pedidos', help: 'Ajuda', theme: 'Tema',
@@ -424,6 +453,7 @@ const MESSAGES = {
   id: {
     specSize: 'Ukuran', specWeight: 'Berat', specNetWeight: 'Berat Bersih', specGrossWeight: 'Berat Kotor', specColor: 'Warna', specMaterial: 'Bahan', specIngredients: 'Komposisi', specShelfLife: 'Masa Simpan', specOrigin: 'Asal', specBrand: 'Merek', specModel: 'Model', specSpecification: 'Spesifikasi', specPackaging: 'Kemasan', specCapacity: 'Kapasitas', specVolume: 'Volume', specApplication: 'Aplikasi', specViscosity: 'Viskositas', specGloss: 'Kilap', specSolidContent: 'Kadar Padatan', specDilution: 'Rasio Pengenceran', specApplicationMethod: 'Metode Aplikasi', specStorage: 'Penyimpanan', specQuantity: 'Jumlah', specUnit: 'Satuan',
     specMixRatio: 'Rasio campuran',
+    specProductName: 'Nama Produk', specType: 'Jenis', specState: 'Bentuk', specSample: 'Sampel', specOtherNames: 'Nama Lain', specMainRawMaterial: 'Bahan Baku Utama', specCustomization: 'Opsi Kustomisasi', specPackagingDelivery: 'Pengemasan & Pengiriman', specEinecsNo: 'No. EINECS', specCasNo: 'No. CAS', specService: 'Layanan', specFeatures: 'Fitur', specShipFrom: 'Dikirim Dari', specConstructionTool: 'Alat Aplikasi', specMF: 'Rumus Molekul',
     rfqNameRequired: 'Isi nama Anda', rfqContactRequired: 'Isi email atau WhatsApp Anda',
     announcement: 'Taojie Internasional · Kirim ke seluruh dunia dari Guangzhou',
     signIn: 'Masuk', orders: 'Pesanan', help: 'Bantuan', theme: 'Tema',
@@ -479,6 +509,7 @@ const MESSAGES = {
   ms: {
     specSize: 'Saiz', specWeight: 'Berat', specNetWeight: 'Berat Bersih', specGrossWeight: 'Berat Kasar', specColor: 'Warna', specMaterial: 'Bahan', specIngredients: 'Kandungan', specShelfLife: 'Jangka Hayat', specOrigin: 'Asal', specBrand: 'Jenama', specModel: 'Model', specSpecification: 'Spesifikasi', specPackaging: 'Pembungkusan', specCapacity: 'Kapasiti', specVolume: 'Isi Padu', specApplication: 'Aplikasi', specViscosity: 'Kelikatan', specGloss: 'Kilauan', specSolidContent: 'Kandungan Pepejal', specDilution: 'Nisbah Pencairan', specApplicationMethod: 'Kaedah Penggunaan', specStorage: 'Penyimpanan', specQuantity: 'Kuantiti', specUnit: 'Unit',
     specMixRatio: 'Nisbah campuran',
+    specProductName: 'Nama Produk', specType: 'Jenis', specState: 'Keadaan', specSample: 'Sampel', specOtherNames: 'Nama Lain', specMainRawMaterial: 'Bahan Mentah Utama', specCustomization: 'Pilihan Penyesuaian', specPackagingDelivery: 'Pembungkusan & Penghantaran', specEinecsNo: 'No. EINECS', specCasNo: 'No. CAS', specService: 'Perkhidmatan', specFeatures: 'Ciri-ciri', specShipFrom: 'Dihantar Dari', specConstructionTool: 'Alat Aplikasi', specMF: 'Formula Molekul',
     rfqNameRequired: 'Sila isi nama anda', rfqContactRequired: 'Sila isi e-mel atau WhatsApp anda',
     announcement: 'Taojie Antarabangsa · Penghantaran ke seluruh dunia dari Guangzhou',
     signIn: 'Log Masuk', orders: 'Pesanan', help: 'Bantuan', theme: 'Tema',
@@ -534,6 +565,7 @@ const MESSAGES = {
   vi: {
     specSize: 'Kích thước', specWeight: 'Trọng lượng', specNetWeight: 'Trọng lượng tịnh', specGrossWeight: 'Tổng trọng lượng', specColor: 'Màu sắc', specMaterial: 'Chất liệu', specIngredients: 'Thành phần', specShelfLife: 'Hạn sử dụng', specOrigin: 'Xuất xứ', specBrand: 'Thương hiệu', specModel: 'Mẫu mã', specSpecification: 'Quy cách', specPackaging: 'Bao bì', specCapacity: 'Dung tích', specVolume: 'Thể tích', specApplication: 'Phạm vi ứng dụng', specViscosity: 'Độ nhớt', specGloss: 'Độ bóng', specSolidContent: 'Hàm lượng rắn', specDilution: 'Tỷ lệ pha loãng', specApplicationMethod: 'Phương pháp thi công', specStorage: 'Bảo quản', specQuantity: 'Số lượng', specUnit: 'Đơn vị',
     specMixRatio: 'Tỉ lệ pha',
+    specProductName: 'Tên sản phẩm', specType: 'Loại', specState: 'Trạng thái', specSample: 'Mẫu', specOtherNames: 'Tên khác', specMainRawMaterial: 'Nguyên liệu chính', specCustomization: 'Tùy chọn tùy chỉnh', specPackagingDelivery: 'Đóng gói & giao hàng', specEinecsNo: 'Số EINECS', specCasNo: 'Số CAS', specService: 'Dịch vụ', specFeatures: 'Đặc điểm', specShipFrom: 'Gửi từ', specConstructionTool: 'Dụng cụ thi công', specMF: 'Công thức phân tử',
     rfqNameRequired: 'Vui lòng nhập tên của bạn', rfqContactRequired: 'Vui lòng nhập email hoặc WhatsApp của bạn',
     announcement: 'Taojie Quốc tế · Giao hàng toàn cầu từ Quảng Châu',
     signIn: 'Đăng nhập', orders: 'Đơn hàng', help: 'Trợ giúp', theme: 'Giao diện',
@@ -589,6 +621,7 @@ const MESSAGES = {
   th: {
     specSize: 'ขนาด', specWeight: 'น้ำหนัก', specNetWeight: 'น้ำหนักสุทธิ', specGrossWeight: 'น้ำหนักรวม', specColor: 'สี', specMaterial: 'วัสดุ', specIngredients: 'ส่วนผสม', specShelfLife: 'อายุการเก็บรักษา', specOrigin: 'แหล่งกำเนิด', specBrand: 'แบรนด์', specModel: 'รุ่น', specSpecification: 'ข้อมูลจำเพาะ', specPackaging: 'บรรจุภัณฑ์', specCapacity: 'ความจุ', specVolume: 'ปริมาตร', specApplication: 'การใช้งาน', specViscosity: 'ความหนืด', specGloss: 'ความเงา', specSolidContent: 'ปริมาณของแข็ง', specDilution: 'อัตราส่วนการเจือจาง', specApplicationMethod: 'วิธีการใช้งาน', specStorage: 'การจัดเก็บ', specQuantity: 'จำนวน', specUnit: 'หน่วย',
     specMixRatio: 'อัตราส่วนผสม',
+    specProductName: 'ชื่อสินค้า', specType: 'ประเภท', specState: 'สถานะ', specSample: 'ตัวอย่าง', specOtherNames: 'ชื่ออื่น', specMainRawMaterial: 'วัตถุดิบหลัก', specCustomization: 'ตัวเลือกการปรับแต่ง', specPackagingDelivery: 'บรรจุภัณฑ์และการจัดส่ง', specEinecsNo: 'เลข EINECS', specCasNo: 'เลข CAS', specService: 'บริการ', specFeatures: 'คุณสมบัติ', specShipFrom: 'จัดส่งจาก', specConstructionTool: 'เครื่องมือก่อสร้าง', specMF: 'สูตรโมเลกุล',
     rfqNameRequired: 'กรุณากรอกชื่อของคุณ', rfqContactRequired: 'กรุณากรอกอีเมลหรือ WhatsApp ของคุณ',
     announcement: 'Taojie ต่างประเทศ · จัดส่งทั่วโลกจากกว่างโจว',
     signIn: 'เข้าสู่ระบบ', orders: 'คำสั่งซื้อ', help: 'ช่วยเหลือ', theme: 'ธีม',
@@ -644,6 +677,7 @@ const MESSAGES = {
   ar: {
     specSize: 'المقاس', specWeight: 'الوزن', specNetWeight: 'الوزن الصافي', specGrossWeight: 'الوزن الإجمالي', specColor: 'اللون', specMaterial: 'المادة', specIngredients: 'المكونات', specShelfLife: 'مدة الصلاحية', specOrigin: 'المنشأ', specBrand: 'العلامة التجارية', specModel: 'الطراز', specSpecification: 'المواصفات', specPackaging: 'التغليف', specCapacity: 'السعة', specVolume: 'الحجم', specApplication: 'الاستخدام', specViscosity: 'اللزوجة', specGloss: 'اللمعان', specSolidContent: 'المحتوى الصلب', specDilution: 'نسبة التخفيف', specApplicationMethod: 'طريقة الاستخدام', specStorage: 'التخزين', specQuantity: 'الكمية', specUnit: 'الوحدة',
     specMixRatio: 'نسبة الخلط',
+    specProductName: 'اسم المنتج', specType: 'النوع', specState: 'الحالة', specSample: 'عينة', specOtherNames: 'أسماء أخرى', specMainRawMaterial: 'المادة الخام الرئيسية', specCustomization: 'خيارات التخصيص', specPackagingDelivery: 'التغليف والتسليم', specEinecsNo: 'رقم EINECS', specCasNo: 'رقم CAS', specService: 'الخدمة', specFeatures: 'المميزات', specShipFrom: 'الشحن من', specConstructionTool: 'أداة التطبيق', specMF: 'الصيغة الجزيئية',
     rfqNameRequired: 'يرجى إدخال اسمك', rfqContactRequired: 'يرجى إدخال بريدك الإلكتروني أو واتساب',
     announcement: 'تاوجيه الدولية · شحن إلى جميع أنحاء العالم من غوانغتشو',
     signIn: 'تسجيل الدخول', orders: 'الطلبات', help: 'مساعدة', theme: 'المظهر',
@@ -699,6 +733,7 @@ const MESSAGES = {
   ru: {
     specSize: 'Размер', specWeight: 'Вес', specNetWeight: 'Вес нетто', specGrossWeight: 'Вес брутто', specColor: 'Цвет', specMaterial: 'Материал', specIngredients: 'Состав', specShelfLife: 'Срок годности', specOrigin: 'Происхождение', specBrand: 'Бренд', specModel: 'Модель', specSpecification: 'Спецификация', specPackaging: 'Упаковка', specCapacity: 'Ёмкость', specVolume: 'Объём', specApplication: 'Применение', specViscosity: 'Вязкость', specGloss: 'Глянец', specSolidContent: 'Содержание твёрдых веществ', specDilution: 'Степень разбавления', specApplicationMethod: 'Способ нанесения', specStorage: 'Хранение', specQuantity: 'Количество', specUnit: 'Единица',
     specMixRatio: 'Пропорция смешивания',
+    specProductName: 'Название продукта', specType: 'Тип', specState: 'Состояние', specSample: 'Образец', specOtherNames: 'Другие названия', specMainRawMaterial: 'Основное сырьё', specCustomization: 'Индивидуальные опции', specPackagingDelivery: 'Упаковка и доставка', specEinecsNo: '№ EINECS', specCasNo: '№ CAS', specService: 'Сервис', specFeatures: 'Особенности', specShipFrom: 'Отправка из', specConstructionTool: 'Строительный инструмент', specMF: 'Молекулярная формула',
     rfqNameRequired: 'Укажите ваше имя', rfqContactRequired: 'Укажите e-mail или WhatsApp',
     announcement: 'Taojie International · Доставка по всему миру из Гуанчжоу',
     signIn: 'Войти', orders: 'Заказы', help: 'Помощь', theme: 'Тема',
@@ -754,6 +789,7 @@ const MESSAGES = {
   de: {
     specSize: 'Größe', specWeight: 'Gewicht', specNetWeight: 'Nettogewicht', specGrossWeight: 'Bruttogewicht', specColor: 'Farbe', specMaterial: 'Material', specIngredients: 'Inhaltsstoffe', specShelfLife: 'Haltbarkeit', specOrigin: 'Herkunft', specBrand: 'Marke', specModel: 'Modell', specSpecification: 'Spezifikation', specPackaging: 'Verpackung', specCapacity: 'Fassungsvermögen', specVolume: 'Volumen', specApplication: 'Anwendung', specViscosity: 'Viskosität', specGloss: 'Glanz', specSolidContent: 'Festkörpergehalt', specDilution: 'Verdünnungsverhältnis', specApplicationMethod: 'Verarbeitungsmethode', specStorage: 'Lagerung', specQuantity: 'Menge', specUnit: 'Einheit',
     specMixRatio: 'Mischverhältnis',
+    specProductName: 'Produktname', specType: 'Typ', specState: 'Zustand', specSample: 'Muster', specOtherNames: 'Andere Namen', specMainRawMaterial: 'Hauptrohstoff', specCustomization: 'Anpassungsoptionen', specPackagingDelivery: 'Verpackung & Lieferung', specEinecsNo: 'EINECS-Nr.', specCasNo: 'CAS-Nr.', specService: 'Service', specFeatures: 'Merkmale', specShipFrom: 'Versand ab', specConstructionTool: 'Verarbeitungswerkzeug', specMF: 'Summenformel',
     rfqNameRequired: 'Bitte geben Sie Ihren Namen ein', rfqContactRequired: 'Bitte geben Sie Ihre E-Mail oder WhatsApp ein',
     announcement: 'Taojie International · Weltweiter Versand ab Guangzhou',
     signIn: 'Anmelden', orders: 'Bestellungen', help: 'Hilfe', theme: 'Design',
