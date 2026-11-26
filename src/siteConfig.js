@@ -42,6 +42,7 @@ export const siteConfig = reactive({
   tiktok: '', // TikTok profile URL
   instagram: '', // Instagram profile URL
   facebook: '', // Facebook page URL
+  x: '', // X (Twitter) profile URL
   youtube: '', // YouTube channel URL
   wechat: '', // WeChat account ID
   // Footer content (admin-edited on the 「页脚」 page): blurb / note /

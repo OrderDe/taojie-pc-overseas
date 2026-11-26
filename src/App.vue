@@ -1102,10 +1102,11 @@ onMounted(async () => {
           <p v-if="siteConfig.hotline" class="promo-tel">{{ t('exportHotline') }}<br /><b>{{ siteConfig.hotline }}</b></p>
           <p v-if="siteConfig.whatsapp" class="promo-tel">{{ t('whatsappLabel') }}<br /><b>{{ siteConfig.whatsapp }}</b></p>
           <p v-if="siteConfig.email" class="promo-tel">{{ t('emailLabel') }}<br /><b>{{ siteConfig.email }}</b></p>
-          <div v-if="siteConfig.tiktok || siteConfig.instagram || siteConfig.facebook || siteConfig.youtube || siteConfig.wechat" class="profile-social">
+          <div v-if="siteConfig.tiktok || siteConfig.instagram || siteConfig.facebook || siteConfig.x || siteConfig.youtube || siteConfig.wechat" class="profile-social">
             <a v-if="siteConfig.tiktok" :href="siteConfig.tiktok" target="_blank" rel="noopener">TikTok</a>
             <a v-if="siteConfig.instagram" :href="siteConfig.instagram" target="_blank" rel="noopener">Instagram</a>
             <a v-if="siteConfig.facebook" :href="siteConfig.facebook" target="_blank" rel="noopener">Facebook</a>
+            <a v-if="siteConfig.x" :href="siteConfig.x" target="_blank" rel="noopener">X</a>
             <a v-if="siteConfig.youtube" :href="siteConfig.youtube" target="_blank" rel="noopener">YouTube</a>
             <span v-if="siteConfig.wechat">WeChat: <b>{{ siteConfig.wechat }}</b></span>
           </div>
