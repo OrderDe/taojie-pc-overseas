@@ -1,5 +1,9 @@
 node_modules/
 dist/
+# Showcase films are deployed as static files, not stored in git
+# (they are re-generated from the TikTok library; see src/data/videos.js).
+public/media/*.mp4
+public/media/posters/*.jpg
 .env
 .env.local
 *.log

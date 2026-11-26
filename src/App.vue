@@ -6,6 +6,8 @@ import CartDrawer from './components/CartDrawer.vue'
 import RfqPanel from './components/RfqPanel.vue'
 import ChatWidget from './components/ChatWidget.vue'
 import SocialWidget from './components/SocialWidget.vue'
+import VideoCard from './components/VideoCard.vue'
+import { VIDEOS } from './data/videos.js'
 import { fetchCategories, fetchKeywords, fetchProducts, fetchProductDetail, fetchBrands, demoBrands, fetchFormulaBrands, fetchFormulaModels, fetchFormulaSearch, fetchFormulaDetail, fetchCustomPage } from './api.js'
 import { siteConfig } from './siteConfig.js'
 import { LANGS, locale, setLocale, t, tx, localizedConfig, specKeyLabel } from './i18n.js'
@@ -30,7 +32,7 @@ const theme = computed(() => {
   return THEMES[key] ? key : 'h'
 })
 
-const view = ref('home') // 'home' | 'detail' | 'formula' | 'profile' | 'page'
+const view = ref('home') // 'home' | 'detail' | 'formula' | 'profile' | 'page' | 'videos'
 const categories = ref([])
 const products = ref([])
 const keywords = ref([])
@@ -163,6 +165,7 @@ async function onNav(item) {
     // from admin-configured nav items via the #formula / #profile links.
     if (item.link === '#formula') { openFormula(); return }
     if (item.link === '#profile') { openProfile(); return }
+    if (item.link === '#videos') { openVideos(); return }
     // The RFQ form is a modal now, not a page section: #rfq opens it
     // from whatever view the visitor is on.
     if (item.link === '#rfq') { openRfqModal(); return }
@@ -389,6 +392,22 @@ function openProfile() {
   currentPageLabel.value = 'profile'; trackView('profile')
   window.scrollTo({ top: 0 })
   loadProfileShowcase()
+}
+// ---- Video showcase (/videos) ----
+// The 62 TikTok films are static files under /media/ (see
+// data/videos.js); the view also answers to the /videos path so
+// shared links and refreshes land on it — nginx falls back to
+// index.html for unknown paths. The home view shows the top 12.
+const homeVideos = VIDEOS.slice(0, 12)
+function openVideos() {
+  view.value = 'videos'
+  currentPageLabel.value = 'videos'; trackView('videos')
+  window.scrollTo({ top: 0 })
+  if (window.location.pathname !== '/videos') history.pushState(null, '', '/videos')
+}
+function goHome() {
+  view.value = 'home'
+  if (window.location.pathname === '/videos') history.pushState(null, '', '/')
 }
 // ---- Custom pages (admin-authored standalone pages) ----
 // A nav item of type 'page' carries its target as link '#page/<slug>';
@@ -749,6 +768,21 @@ onMounted(async () => {
   // page, and later hash edits to a page link do the same.
   const initialSlug = pageSlugFromHash(window.location.hash)
   if (initialSlug) openCustomPage(initialSlug)
+  // Direct link / refresh on /videos opens the showcase view, and
+  // the browser back button steps out of it again.
+  const onVideosPath = () => window.location.pathname.replace(/\/+$/, '') === '/videos'
+  if (onVideosPath()) {
+    view.value = 'videos'
+    currentPageLabel.value = 'videos'; trackView('videos')
+  }
+  window.addEventListener('popstate', () => {
+    if (onVideosPath() && view.value !== 'videos') {
+      view.value = 'videos'
+      currentPageLabel.value = 'videos'; trackView('videos')
+    } else if (!onVideosPath() && view.value === 'videos') {
+      view.value = 'home'
+    }
+  })
   window.addEventListener('hashchange', () => {
     const slug = pageSlugFromHash(window.location.hash)
     if (slug && slug !== customPageSlug.value) openCustomPage(slug)
@@ -798,7 +832,7 @@ onMounted(async () => {
     <!-- Header -->
     <header class="header">
       <div class="wrap header-in">
-        <a class="logo" href="#" @click.prevent="view = 'home'"><img v-if="siteConfig.logo" class="logo-img" :src="siteConfig.logo" alt="TAOJIE" /><template v-else>TAOJIE<span class="logo-dot">.</span></template></a>
+        <a class="logo" href="#" @click.prevent="goHome"><img v-if="siteConfig.logo" class="logo-img" :src="siteConfig.logo" alt="TAOJIE" /><template v-else>TAOJIE<span class="logo-dot">.</span></template></a>
         <form class="search" @submit.prevent="onSearch">
           <input v-model="query" :placeholder="searchPlaceholder" />
           <button type="submit">{{ t('search') }}</button>
@@ -875,6 +909,19 @@ onMounted(async () => {
         <div class="grid">
           <ProductCard v-for="p in products" :key="p.id" :product="p" :theme="theme"
             @open="openProduct" @add="addToCart" @quote="requestQuoteChat" />
+        </div>
+      </section>
+
+      <!-- Video showcase: the most-watched dozen films; the full
+           set lives on the /videos view. Posters only until a tap —
+           nothing preloads over the 5 Mbps link. -->
+      <section id="videos" class="wrap video-section">
+        <div class="catalogue-head">
+          <h2>{{ t('videosTitle') }}</h2>
+          <button type="button" class="btn btn-ghost btn-sm" @click="openVideos">{{ t('viewAllVideos') }} →</button>
+        </div>
+        <div class="video-grid">
+          <VideoCard v-for="v in homeVideos" :key="v.rank" :video="v" />
         </div>
       </section>
 
@@ -1175,6 +1222,16 @@ onMounted(async () => {
         <div v-else class="empty">{{ t('pageNotFound') }}</div>
       </main>
     </template>
+
+    <!-- Video showcase view (/videos): all 62 films, click to play -->
+    <main v-else-if="view === 'videos'" class="wrap videos-page">
+      <button class="btn btn-ghost btn-sm" @click="goHome">{{ t('back') }}</button>
+      <h1 class="page-title">{{ t('videosTitle') }}</h1>
+      <p class="videos-sub">{{ t('videosSub', { n: VIDEOS.length }) }}</p>
+      <div class="video-grid">
+        <VideoCard v-for="v in VIDEOS" :key="v.rank" :video="v" />
+      </div>
+    </main>
 
     <footer class="footer">
       <div class="wrap footer-in">
