@@ -19,6 +19,7 @@ const ICONS = {
   tiktok: '<path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 1.88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" fill="currentColor" stroke="none"/>',
   facebook: '<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>',
   x: '<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H4.64l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill="currentColor" stroke="none"/>',
+  whatsappChannel: '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><path d="M9.8 8.2c.1-.3.4-.3.6-.3h.5c.2 0 .4 0 .5.4l.7 1.7c.1.2 0 .4-.1.6l-.4.5c.5.9 1.4 1.8 2.4 2.3l.5-.5c.2-.1.4-.2.6-.1l1.7.8c.3.2.4.3.4.6v.5c0 .2-.1.5-.6.6-.5.2-1.2.2-2.4-.2-2.7-.9-4.9-3.2-5.7-5.6-.3-1-.2-1.8 0-2.1z" fill="currentColor" stroke="none"/>',
   youtube: '<path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z" fill="currentColor" stroke="none"/>',
   wechat: '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><circle cx="8.5" cy="10.5" r=".8" fill="currentColor" stroke="none"/><circle cx="15" cy="10.5" r=".8" fill="currentColor" stroke="none"/>'
 }
@@ -39,6 +40,7 @@ const channels = computed(() => {
   if (cfg.tiktok) c.push({ key: 'tiktok', label: 'TikTok', color: '#111111', href: cfg.tiktok })
   if (cfg.facebook) c.push({ key: 'facebook', label: 'Facebook', color: '#1877f2', href: cfg.facebook })
   if (cfg.x) c.push({ key: 'x', label: 'X', color: '#000000', href: cfg.x })
+  if (cfg.whatsappChannel) c.push({ key: 'whatsappChannel', label: 'WhatsApp Channel', color: '#25d366', href: cfg.whatsappChannel })
   if (cfg.youtube) c.push({ key: 'youtube', label: 'YouTube', color: '#ff0000', href: cfg.youtube })
   if (cfg.wechat) c.push({ key: 'wechat', label: 'WeChat', color: '#07c160', wechat: cfg.wechat })
   return c

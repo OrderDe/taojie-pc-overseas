@@ -43,6 +43,7 @@ export const siteConfig = reactive({
   instagram: '', // Instagram profile URL
   facebook: '', // Facebook page URL
   x: '', // X (Twitter) profile URL
+  whatsappChannel: '', // WhatsApp channel invite URL ("Join our WhatsApp Channel")
   youtube: '', // YouTube channel URL
   wechat: '', // WeChat account ID
   // Footer content (admin-edited on the 「页脚」 page): blurb / note /
