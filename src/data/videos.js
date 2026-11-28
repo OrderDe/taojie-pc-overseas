@@ -6,6 +6,14 @@
 // named media/ (not videos/) so it can never shadow the /videos route.
 export const VIDEOS = [
   {
+    "rank": 0,
+    "title": "Meet Ryan — Owner of Car Paint Factory (Wengyuan, Guangdong, China)",
+    "src": "/media/intro-ryan.mp4",
+    "poster": "/media/posters/intro-ryan.jpg",
+    "views": 0,
+    "duration": 47
+  },
+  {
     "rank": 1,
     "title": "Pearl Purple Car Paint That Shifts With the Light",
     "src": "/media/20240428_7362722900740181253.mp4",

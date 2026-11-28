@@ -887,6 +887,25 @@ onMounted(async () => {
         </div>
       </section>
 
+      <!-- Featured: owner introduction film — the most prominent slot
+           on the home page, directly under the hero. -->
+      <section class="wrap intro-feature">
+        <div class="intro-media">
+          <video src="/media/intro-ryan.mp4" poster="/media/posters/intro-ryan.jpg" controls playsinline preload="metadata"></video>
+        </div>
+        <div class="intro-copy">
+          <p class="hero-eyebrow">{{ t('introEyebrow') }}</p>
+          <h2>{{ t('introTitle') }}</h2>
+          <p class="intro-text">{{ t('introText') }}</p>
+          <ul class="intro-points">
+            <li>{{ t('introPoint1') }}</li>
+            <li>{{ t('introPoint2') }}</li>
+            <li>{{ t('introPoint3') }}</li>
+          </ul>
+          <a v-if="siteConfig.whatsapp" class="btn btn-primary" :href="'https://wa.me/' + siteConfig.whatsapp.replace(/\D/g, '')" target="_blank" rel="noopener">{{ t('introBtn') }}</a>
+        </div>
+      </section>
+
       <!-- Brand story (theme F) -->
       <section v-if="theme === 'f'" id="story" class="wrap story">
         <h2>{{ siteConfig.storyTitle || t('storyTitle') }}</h2>
