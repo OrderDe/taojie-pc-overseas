@@ -15,6 +15,14 @@ export const VIDEOS = [
   },
   {
     "rank": 1,
+    "title": "TECH TALK: How to Mix White Pearl — Crystal vs Regular Pearl, Check the Flop at 45°",
+    "src": "/media/white-pearl.mp4",
+    "poster": "/media/posters/white-pearl.jpg",
+    "views": 0,
+    "duration": 107
+  },
+  {
+    "rank": 2,
     "title": "Pearl Purple Car Paint That Shifts With the Light",
     "src": "/media/20240428_7362722900740181253.mp4",
     "poster": "/media/posters/20240428_7362722900740181253.jpg",
@@ -22,7 +30,7 @@ export const VIDEOS = [
     "duration": 6
   },
   {
-    "rank": 2,
+    "rank": 3,
     "title": "Bright Red, Zero Apologies: A Red That Turns Heads in the Booth",
     "src": "/media/20240428_7362719964328938757.mp4",
     "poster": "/media/posters/20240428_7362719964328938757.jpg",
@@ -30,7 +38,7 @@ export const VIDEOS = [
     "duration": 8
   },
   {
-    "rank": 3,
+    "rank": 4,
     "title": "The Finish Everyone Stops Scrolling For - Special Effect Car Paint in Motion",
     "src": "/media/20240401_7352835841724632325.mp4",
     "poster": "/media/posters/20240401_7352835841724632325.jpg",
@@ -38,7 +46,7 @@ export const VIDEOS = [
     "duration": 6
   },
   {
-    "rank": 4,
+    "rank": 5,
     "title": "Pearl Black: The Deep, Quiet Shine Every Painter Wants to Spray",
     "src": "/media/20240507_7366168295420071186.mp4",
     "poster": "/media/posters/20240507_7366168295420071186.jpg",
@@ -46,7 +54,7 @@ export const VIDEOS = [
     "duration": 7
   },
   {
-    "rank": 5,
+    "rank": 6,
     "title": "Mixing a Pearl Silver Palette by Hand - Inside Our Colour Lab",
     "src": "/media/20240315_7346494540242636037.mp4",
     "poster": "/media/posters/20240315_7346494540242636037.jpg",
@@ -54,7 +62,7 @@ export const VIDEOS = [
     "duration": 8
   },
   {
-    "rank": 6,
+    "rank": 7,
     "title": "Pearl White Done Right: Clean, Bright and Full of Sparkle",
     "src": "/media/20240509_7366917314563804422.mp4",
     "poster": "/media/posters/20240509_7366917314563804422.jpg",
@@ -62,7 +70,7 @@ export const VIDEOS = [
     "duration": 6
   },
   {
-    "rank": 7,
+    "rank": 8,
     "title": "Pure Silver, Liquid Metal Look - Customisable Refinish Colour",
     "src": "/media/20240327_7350985426171137285.mp4",
     "poster": "/media/posters/20240327_7350985426171137285.jpg",
@@ -70,7 +78,7 @@ export const VIDEOS = [
     "duration": 7
   },
   {
-    "rank": 8,
+    "rank": 9,
     "title": "Our Best-Selling Silvery White, Poured and Ready to Spray",
     "src": "/media/20231227_7317101538248363269.mp4",
     "poster": "/media/posters/20231227_7317101538248363269.jpg",
@@ -78,7 +86,7 @@ export const VIDEOS = [
     "duration": 19
   },
   {
-    "rank": 9,
+    "rank": 10,
     "title": "Straight From the Manufacturer: Fresh Colour, Fresh Batch",
     "src": "/media/20240125_7327987387051642118.mp4",
     "poster": "/media/posters/20240125_7327987387051642118.jpg",
@@ -86,7 +94,7 @@ export const VIDEOS = [
     "duration": 9
   },
   {
-    "rank": 10,
+    "rank": 11,
     "title": "Dark Green With Real Depth - Not Your Average Fleet Green",
     "src": "/media/20240417_7358772729350229254.mp4",
     "poster": "/media/posters/20240417_7358772729350229254.jpg",
@@ -94,7 +102,7 @@ export const VIDEOS = [
     "duration": 12
   },
   {
-    "rank": 11,
+    "rank": 12,
     "title": "Orange That Pops Under Any Light - Custom Car Paint Colour",
     "src": "/media/20240509_7366912343621537029.mp4",
     "poster": "/media/posters/20240509_7366912343621537029.jpg",
@@ -102,7 +110,7 @@ export const VIDEOS = [
     "duration": 6
   },
   {
-    "rank": 12,
+    "rank": 13,
     "title": "Silver Gray: The Understated Colour That Sells Itself",
     "src": "/media/20240419_7359505590034435334.mp4",
     "poster": "/media/posters/20240419_7359505590034435334.jpg",
@@ -110,7 +118,7 @@ export const VIDEOS = [
     "duration": 6
   },
   {
-    "rank": 13,
+    "rank": 14,
     "title": "Grass Green, Fresh Off the Mixing Bench",
     "src": "/media/20240419_7359500904690617606.mp4",
     "poster": "/media/posters/20240419_7359500904690617606.jpg",
@@ -118,7 +126,7 @@ export const VIDEOS = [
     "duration": 7
   },
   {
-    "rank": 14,
+    "rank": 15,
     "title": "Glass Green - A Clear, Gem-Like Green for Standout Finishes",
     "src": "/media/20240412_7356919689353727238.mp4",
     "poster": "/media/posters/20240412_7356919689353727238.jpg",
@@ -126,7 +134,7 @@ export const VIDEOS = [
     "duration": 8
   },
   {
-    "rank": 15,
+    "rank": 16,
     "title": "Silver White With a Soft Pearl Glow",
     "src": "/media/20240413_7357153732016016646.mp4",
     "poster": "/media/posters/20240413_7357153732016016646.jpg",
@@ -134,7 +142,7 @@ export const VIDEOS = [
     "duration": 8
   },
   {
-    "rank": 16,
+    "rank": 17,
     "title": "Quick Question: Would You Spray This Colour on Your Own Car?",
     "src": "/media/20240105_7320501361106275589.mp4",
     "poster": "/media/posters/20240105_7320501361106275589.jpg",
@@ -142,7 +150,7 @@ export const VIDEOS = [
     "duration": 12
   },
   {
-    "rank": 17,
+    "rank": 18,
     "title": "Today's Bench Work: Dialling In a Pearl Blue",
     "src": "/media/20240315_7346489854353558790.mp4",
     "poster": "/media/posters/20240315_7346489854353558790.jpg",
@@ -150,7 +158,7 @@ export const VIDEOS = [
     "duration": 10
   },
   {
-    "rank": 18,
+    "rank": 19,
     "title": "Pick a Colour, Any Colour - Tell Us Your Favourite in the Comments",
     "src": "/media/20240408_7355439845503700230.mp4",
     "poster": "/media/posters/20240408_7355439845503700230.jpg",
@@ -158,7 +166,7 @@ export const VIDEOS = [
     "duration": 9
   },
   {
-    "rank": 19,
+    "rank": 20,
     "title": "Laser Silver: Sharp, Bright and Mirror-Clean",
     "src": "/media/20240418_7359007811323448582.mp4",
     "poster": "/media/posters/20240418_7359007811323448582.jpg",
@@ -166,7 +174,7 @@ export const VIDEOS = [
     "duration": 7
   },
   {
-    "rank": 20,
+    "rank": 21,
     "title": "Fourteen Seconds of Pure Special-Effect Colour Play",
     "src": "/media/20240302_7341717146868731142.mp4",
     "poster": "/media/posters/20240302_7341717146868731142.jpg",
@@ -174,7 +182,7 @@ export const VIDEOS = [
     "duration": 14
   },
   {
-    "rank": 21,
+    "rank": 22,
     "title": "Dark Blue, Full-Length Look - 17 Seconds of Deep Gloss",
     "src": "/media/20240507_7366175179283680530.mp4",
     "poster": "/media/posters/20240507_7366175179283680530.jpg",
@@ -182,7 +190,7 @@ export const VIDEOS = [
     "duration": 17
   },
   {
-    "rank": 22,
+    "rank": 23,
     "title": "Sourcing Car Paint? Start With a Supplier Who Mixes In-House",
     "src": "/media/20240129_7329457089502383366.mp4",
     "poster": "/media/posters/20240129_7329457089502383366.jpg",
@@ -190,7 +198,7 @@ export const VIDEOS = [
     "duration": 10
   },
   {
-    "rank": 23,
+    "rank": 24,
     "title": "Watch the Effect Pigments Wake Up in This Pour",
     "src": "/media/20240125_7327987825981377798.mp4",
     "poster": "/media/posters/20240125_7327987825981377798.jpg",
@@ -198,7 +206,7 @@ export const VIDEOS = [
     "duration": 11
   },
   {
-    "rank": 24,
+    "rank": 25,
     "title": "Inside the Factory: Where Your Next Paint Order Starts",
     "src": "/media/20240614_7380310554121948422.mp4",
     "poster": "/media/posters/20240614_7380310554121948422.jpg",
@@ -206,7 +214,7 @@ export const VIDEOS = [
     "duration": 10
   },
   {
-    "rank": 25,
+    "rank": 26,
     "title": "Is This Bright Enough for You? Twenty Seconds, You Decide",
     "src": "/media/20240105_7320502442976677125.mp4",
     "poster": "/media/posters/20240105_7320502442976677125.jpg",
@@ -214,7 +222,7 @@ export const VIDEOS = [
     "duration": 20
   },
   {
-    "rank": 26,
+    "rank": 27,
     "title": "Hand-Mixed at the Bench: No Machines, Just a Colourist's Eye",
     "src": "/media/20240613_7379791475648875781.mp4",
     "poster": "/media/posters/20240613_7379791475648875781.jpg",
@@ -222,7 +230,7 @@ export const VIDEOS = [
     "duration": 14
   },
   {
-    "rank": 27,
+    "rank": 28,
     "title": "A Quiet Pour, a Loud Colour - Special Effects Up Close",
     "src": "/media/20240305_7342801543218892037.mp4",
     "poster": "/media/posters/20240305_7342801543218892037.jpg",
@@ -230,7 +238,7 @@ export const VIDEOS = [
     "duration": 9
   },
   {
-    "rank": 28,
+    "rank": 29,
     "title": "From Our Mixing Room to Your Spray Booth",
     "src": "/media/20240615_7380681573768727813.mp4",
     "poster": "/media/posters/20240615_7380681573768727813.jpg",
@@ -238,7 +246,7 @@ export const VIDEOS = [
     "duration": 10
   },
   {
-    "rank": 29,
+    "rank": 30,
     "title": "Custom Colour, Mixed to Order - See How It Flows",
     "src": "/media/20240408_7355441263698578693.mp4",
     "poster": "/media/posters/20240408_7355441263698578693.jpg",
@@ -246,7 +254,7 @@ export const VIDEOS = [
     "duration": 7
   },
   {
-    "rank": 30,
+    "rank": 31,
     "title": "Special Effects in Motion: Light Doing the Talking",
     "src": "/media/20240302_7341718880366169349.mp4",
     "poster": "/media/posters/20240302_7341718880366169349.jpg",
@@ -254,7 +262,7 @@ export const VIDEOS = [
     "duration": 10
   },
   {
-    "rank": 31,
+    "rank": 32,
     "title": "The Supplier Behind the Colour: Production Floor Walkthrough",
     "src": "/media/20240614_7380496041147157765.mp4",
     "poster": "/media/posters/20240614_7380496041147157765.jpg",
@@ -262,7 +270,7 @@ export const VIDEOS = [
     "duration": 10
   },
   {
-    "rank": 32,
+    "rank": 33,
     "title": "Cobalt Blue - Bold, Saturated and Ready for Clear Coat",
     "src": "/media/20240423_7360877416111279366.mp4",
     "poster": "/media/posters/20240423_7360877416111279366.jpg",
@@ -270,7 +278,7 @@ export const VIDEOS = [
     "duration": 6
   },
   {
-    "rank": 33,
+    "rank": 34,
     "title": "Fresh Batch Flowing: Colour Check Before It Ships",
     "src": "/media/20240305_7342807560853933317.mp4",
     "poster": "/media/posters/20240305_7342807560853933317.jpg",
@@ -278,7 +286,7 @@ export const VIDEOS = [
     "duration": 9
   },
   {
-    "rank": 34,
+    "rank": 35,
     "title": "BOSSBON Dark Red on the Mixer - Fresh From Our Factory Line",
     "src": "/media/20240616_7381052703520099590.mp4",
     "poster": "/media/posters/20240616_7381052703520099590.jpg",
@@ -286,7 +294,7 @@ export const VIDEOS = [
     "duration": 9
   },
   {
-    "rank": 35,
+    "rank": 36,
     "title": "Manufacturer Direct: Colour, Consistency and Supply You Can Plan Around",
     "src": "/media/20240126_7328281700574760198.mp4",
     "poster": "/media/posters/20240126_7328281700574760198.jpg",
@@ -294,7 +302,7 @@ export const VIDEOS = [
     "duration": 10
   },
   {
-    "rank": 36,
+    "rank": 37,
     "title": "Another Batch, Another Booth-Ready Colour Leaving the Factory",
     "src": "/media/20240615_7380867107094875397.mp4",
     "poster": "/media/posters/20240615_7380867107094875397.jpg",
@@ -302,7 +310,7 @@ export const VIDEOS = [
     "duration": 13
   },
   {
-    "rank": 37,
+    "rank": 38,
     "title": "Simple Pleasure: Watching a Perfect Colour Come Together",
     "src": "/media/20240313_7345787427635629318.mp4",
     "poster": "/media/posters/20240313_7345787427635629318.jpg",
@@ -310,7 +318,7 @@ export const VIDEOS = [
     "duration": 12
   },
   {
-    "rank": 38,
+    "rank": 39,
     "title": "Black Gold - When Black Decides to Show Off",
     "src": "/media/20240423_7360884157087501574.mp4",
     "poster": "/media/posters/20240423_7360884157087501574.jpg",
@@ -318,7 +326,7 @@ export const VIDEOS = [
     "duration": 7
   },
   {
-    "rank": 39,
+    "rank": 40,
     "title": "Ten Seconds of Colour That Refuses to Sit Still",
     "src": "/media/20240116_7324617305109859590.mp4",
     "poster": "/media/posters/20240116_7324617305109859590.jpg",
@@ -326,7 +334,7 @@ export const VIDEOS = [
     "duration": 10
   },
   {
-    "rank": 40,
+    "rank": 41,
     "title": "Pearl Green: Spring's Colour, Bottled for the Booth",
     "src": "/media/20240319_7348007346674732294.mp4",
     "poster": "/media/posters/20240319_7348007346674732294.jpg",
@@ -334,7 +342,7 @@ export const VIDEOS = [
     "duration": 9
   },
   {
-    "rank": 41,
+    "rank": 42,
     "title": "Dark Blue, Honest Opinion Needed - Yay or Nay?",
     "src": "/media/20240322_7349070487214918917.mp4",
     "poster": "/media/posters/20240322_7349070487214918917.jpg",
@@ -342,7 +350,7 @@ export const VIDEOS = [
     "duration": 5
   },
   {
-    "rank": 42,
+    "rank": 43,
     "title": "Yellow Pearl: Sunshine With a Shimmer",
     "src": "/media/20240313_7345794777348132101.mp4",
     "poster": "/media/posters/20240313_7345794777348132101.jpg",
@@ -350,7 +358,7 @@ export const VIDEOS = [
     "duration": 8
   },
   {
-    "rank": 43,
+    "rank": 44,
     "title": "Factory-Made Colour for Professional Painters and Body Shops",
     "src": "/media/20240109_7322041369151671557.mp4",
     "poster": "/media/posters/20240109_7322041369151671557.jpg",
@@ -358,7 +366,7 @@ export const VIDEOS = [
     "duration": 12
   },
   {
-    "rank": 44,
+    "rank": 45,
     "title": "The Shade That Wins Hearts - A Colour Made to Be Loved",
     "src": "/media/20240401_7352839756121754885.mp4",
     "poster": "/media/posters/20240401_7352839756121754885.jpg",
@@ -366,7 +374,7 @@ export const VIDEOS = [
     "duration": 7
   },
   {
-    "rank": 45,
+    "rank": 46,
     "title": "Effect Pigments Doing Their Thing, Up Close",
     "src": "/media/20240118_7325361845714357510.mp4",
     "poster": "/media/posters/20240118_7325361845714357510.jpg",
@@ -374,7 +382,7 @@ export const VIDEOS = [
     "duration": 9
   },
   {
-    "rank": 46,
+    "rank": 47,
     "title": "Deep Purple With a Royal Streak",
     "src": "/media/20240327_7350959328213486854.mp4",
     "poster": "/media/posters/20240327_7350959328213486854.jpg",
@@ -382,7 +390,7 @@ export const VIDEOS = [
     "duration": 10
   },
   {
-    "rank": 47,
+    "rank": 48,
     "title": "Second Round at the Mixing Bench - Hand-Blended Colour, Take Two",
     "src": "/media/20240612_7379698726190763270.mp4",
     "poster": "/media/posters/20240612_7379698726190763270.jpg",
@@ -390,7 +398,7 @@ export const VIDEOS = [
     "duration": 12
   },
   {
-    "rank": 48,
+    "rank": 49,
     "title": "Built in Our Factory, Ready for Your Market",
     "src": "/media/20240109_7322042903767813381.mp4",
     "poster": "/media/posters/20240109_7322042903767813381.jpg",
@@ -398,7 +406,7 @@ export const VIDEOS = [
     "duration": 11
   },
   {
-    "rank": 49,
+    "rank": 50,
     "title": "Your Turn: Which Colour Should We Mix Next?",
     "src": "/media/20240322_7349079621444340997.mp4",
     "poster": "/media/posters/20240322_7349079621444340997.jpg",
@@ -406,7 +414,7 @@ export const VIDEOS = [
     "duration": 7
   },
   {
-    "rank": 50,
+    "rank": 51,
     "title": "Eight Seconds of Gloss, Sparkle and Colour Shift",
     "src": "/media/20240308_7343834970294668549.mp4",
     "poster": "/media/posters/20240308_7343834970294668549.jpg",
@@ -414,7 +422,7 @@ export const VIDEOS = [
     "duration": 8
   },
   {
-    "rank": 51,
+    "rank": 52,
     "title": "The Pour Never Lies - Judging a Colour by Its Flow",
     "src": "/media/20240116_7324617594932169990.mp4",
     "poster": "/media/posters/20240116_7324617594932169990.jpg",
@@ -422,7 +430,7 @@ export const VIDEOS = [
     "duration": 10
   },
   {
-    "rank": 52,
+    "rank": 53,
     "title": "Rose Colour: Soft Pink With a Pearl Attitude",
     "src": "/media/20240308_7343840207407435013.mp4",
     "poster": "/media/posters/20240308_7343840207407435013.jpg",
@@ -430,7 +438,7 @@ export const VIDEOS = [
     "duration": 12
   },
   {
-    "rank": 53,
+    "rank": 54,
     "title": "From Factory Floor to Finish Line - How Our Colour Travels",
     "src": "/media/20240126_7328281050931612933.mp4",
     "poster": "/media/posters/20240126_7328281050931612933.jpg",
@@ -438,7 +446,7 @@ export const VIDEOS = [
     "duration": 8
   },
   {
-    "rank": 54,
+    "rank": 55,
     "title": "Customisable Colour, Made by the Manufacturer, Not a Middleman",
     "src": "/media/20240111_7322761248985156869.mp4",
     "poster": "/media/posters/20240111_7322761248985156869.jpg",
@@ -446,7 +454,7 @@ export const VIDEOS = [
     "duration": 9
   },
   {
-    "rank": 55,
+    "rank": 56,
     "title": "Bright Colours Only: Which One Gets Your Vote?",
     "src": "/media/20240319_7348014484910329093.mp4",
     "poster": "/media/posters/20240319_7348014484910329093.jpg",
@@ -454,7 +462,7 @@ export const VIDEOS = [
     "duration": 8
   },
   {
-    "rank": 56,
+    "rank": 57,
     "title": "Fifteen Seconds Inside a Working Paint Factory",
     "src": "/media/20240118_7325362207884086534.mp4",
     "poster": "/media/posters/20240118_7325362207884086534.jpg",
@@ -462,7 +470,7 @@ export const VIDEOS = [
     "duration": 15
   },
   {
-    "rank": 57,
+    "rank": 58,
     "title": "Colour in Motion - Thirteen Seconds of Pure Refinish Eye Candy",
     "src": "/media/20240104_7320171220085869829.mp4",
     "poster": "/media/posters/20240104_7320171220085869829.jpg",
@@ -470,7 +478,7 @@ export const VIDEOS = [
     "duration": 13
   },
   {
-    "rank": 58,
+    "rank": 59,
     "title": "Made to Your Spec: Custom Colour Mixing in Action",
     "src": "/media/20240111_7322760924383677702.mp4",
     "poster": "/media/posters/20240111_7322760924383677702.jpg",
@@ -478,7 +486,7 @@ export const VIDEOS = [
     "duration": 14
   },
   {
-    "rank": 59,
+    "rank": 60,
     "title": "Twenty-Two Seconds of Custom Colours - Our Full Palette Teaser",
     "src": "/media/20231227_7317119389395111174.mp4",
     "poster": "/media/posters/20231227_7317119389395111174.jpg",
@@ -486,7 +494,7 @@ export const VIDEOS = [
     "duration": 22
   },
   {
-    "rank": 60,
+    "rank": 61,
     "title": "Free Samples, Real Colour - A Supplier Invitation",
     "src": "/media/20231229_7317964758739619078.mp4",
     "poster": "/media/posters/20231229_7317964758739619078.jpg",
@@ -494,7 +502,7 @@ export const VIDEOS = [
     "duration": 10
   },
   {
-    "rank": 61,
+    "rank": 62,
     "title": "Third Visit to the Bench: Hand-Mixing, Slow and Precise",
     "src": "/media/20240612_7379605998924762374.mp4",
     "poster": "/media/posters/20240612_7379605998924762374.jpg",
@@ -502,7 +510,7 @@ export const VIDEOS = [
     "duration": 16
   },
   {
-    "rank": 62,
+    "rank": 63,
     "title": "The Long Pour: 26 Seconds With a Colour That Keeps Changing",
     "src": "/media/20240104_7320170149661789445.mp4",
     "poster": "/media/posters/20240104_7320170149661789445.jpg",
